@@ -1,0 +1,117 @@
+package com.hospital.patient.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+public class PatientDto {
+    
+    private Long id;
+    
+    @NotBlank(message = "Name is required")
+    private String nom;
+    
+    @Past(message = "Birth date must be in the past")
+    private LocalDate dateNaissance;
+    
+    @Email(message = "Email should be valid")
+    private String email;
+    
+    private String numeroTelephone;
+    private String adresse;
+    private String numeroSecuriteSociale;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    
+    // Constructors
+    public PatientDto() {}
+    
+    public PatientDto(Long id, String nom, LocalDate dateNaissance, String email, 
+                      String numeroTelephone, String adresse, String numeroSecuriteSociale,
+                      LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.nom = nom;
+        this.dateNaissance = dateNaissance;
+        this.email = email;
+        this.numeroTelephone = numeroTelephone;
+        this.adresse = adresse;
+        this.numeroSecuriteSociale = numeroSecuriteSociale;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+    
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getNom() {
+        return nom;
+    }
+    
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+    
+    public LocalDate getDateNaissance() {
+        return dateNaissance;
+    }
+    
+    public void setDateNaissance(LocalDate dateNaissance) {
+        this.dateNaissance = dateNaissance;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getNumeroTelephone() {
+        return numeroTelephone;
+    }
+    
+    public void setNumeroTelephone(String numeroTelephone) {
+        this.numeroTelephone = numeroTelephone;
+    }
+    
+    public String getAdresse() {
+        return adresse;
+    }
+    
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
+    }
+    
+    public String getNumeroSecuriteSociale() {
+        return numeroSecuriteSociale;
+    }
+    
+    public void setNumeroSecuriteSociale(String numeroSecuriteSociale) {
+        this.numeroSecuriteSociale = numeroSecuriteSociale;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}

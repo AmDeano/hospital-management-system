@@ -1,0 +1,139 @@
+package com.hospital.patient.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(n = "patients")
+public class Patient {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @NotBlank(message = "Name is required")
+    @Column(nullable = false)
+    private String nom; // Name in French as per your diagram
+    
+    @Past(message = "Birth date must be in the past")
+    @Column(n = "date_naissance")
+    private LocalDate dateNaissance; // Birth date
+    
+    @Email(message = "Email should be valid")
+    private String email;
+    
+    @Column(n = "numero_telephone")
+    private String numeroTelephone; // Phone number
+    
+    private String adresse; // Address
+    
+    @Column(n = "numero_securite_sociale")
+    private String numeroSecuriteSociale; // Social security number
+    
+    @Column(n = "created_at")
+    private LocalDateTime createdAt;
+    
+    @Column(n = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+    
+    // Constructors
+    public Patient() {}
+    
+    public Patient(String nom, LocalDate dateNaissance, String email, 
+                   String numeroTelephone, String adresse, String numeroSecuriteSociale) {
+        this.nom = nom;
+        this.dateNaissance = dateNaissance;
+        this.email = email;
+        this.numeroTelephone = numeroTelephone;
+        this.adresse = adresse;
+        this.numeroSecuriteSociale = numeroSecuriteSociale;
+    }
+    
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getNom() {
+        return nom;
+    }
+    
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+    
+    public LocalDate getDateNaissance() {
+        return dateNaissance;
+    }
+    
+    public void setDateNaissance(LocalDate dateNaissance) {
+        this.dateNaissance = dateNaissance;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getNumeroTelephone() {
+        return numeroTelephone;
+    }
+    
+    public void setNumeroTelephone(String numeroTelephone) {
+        this.numeroTelephone = numeroTelephone;
+    }
+    
+    public String getAdresse() {
+        return adresse;
+    }
+    
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
+    }
+    
+    public String getNumeroSecuriteSociale() {
+        return numeroSecuriteSociale;
+    }
+    
+    public void setNumeroSecuriteSociale(String numeroSecuriteSociale) {
+        this.numeroSecuriteSociale = numeroSecuriteSociale;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}
