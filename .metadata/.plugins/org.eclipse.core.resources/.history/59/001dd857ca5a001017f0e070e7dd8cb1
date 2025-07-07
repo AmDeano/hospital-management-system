@@ -1,0 +1,10 @@
+package com.hospital.employee;
+
+public class EmployeeServiceApplication {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

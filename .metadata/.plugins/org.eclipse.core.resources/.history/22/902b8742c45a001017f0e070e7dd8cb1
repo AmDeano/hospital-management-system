@@ -1,0 +1,111 @@
+package com.hospital.patient.service;
+
+import com.hospital.patient.dto.PatientDto;
+import com.hospital.patient.entity.Patient;
+import com.hospital.patient.exception.PatientNotFoundException;
+import com.hospital.patient.exception.DuplicatePatientException;
+import com.hospital.patient.repository.PatientRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class PatientService {
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    public PatientDto createPatient(PatientDto patientDto) {
+        if (patientRepository.existsByEmail(patientDto.getEmail())) {
+            throw new DuplicatePatientException("Patient with email " + patientDto.getEmail() + " already exists");
+        }
+
+        if (patientRepository.existsByNumeroSecuriteSociale(patientDto.getNumeroSecuriteSociale())) {
+            throw new DuplicatePatientException("Patient with SSN " + patientDto.getNumeroSecuriteSociale() + " already exists");
+        }
+
+        Patient patient = convertToEntity(patientDto);
+        Patient savedPatient = patientRepository.save(patient);
+        return convertToDto(savedPatient);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PatientDto> getAllPatients() {
+        return patientRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PatientDto getPatientById(String cin) {
+        Patient patient = patientRepository.findById(cin).orElseThrow(() -> new PatientNotFoundException("Patient not found with CIN: " + cin));
+        return convertToDto(patient);
+    }
+
+    @Transactional(readOnly = true)
+    public PatientDto getPatientByEmail(String email) {
+        Patient patient = patientRepository.findByEmail(email).orElseThrow(() -> new PatientNotFoundException("Patient not found with email: " + email));
+        return convertToDto(patient);
+    }
+
+    public PatientDto updatePatient(String cin, PatientDto patientDto) {
+        Patient existingPatient = patientRepository.findById(cin).orElseThrow(() -> new PatientNotFoundException("Patient not found with CIN: " + cin));
+
+        if (!existingPatient.getEmail().equals(patientDto.getEmail()) && patientRepository.existsByEmail(patientDto.getEmail())) {
+            throw new DuplicatePatientException("Patient with email " + patientDto.getEmail() + " already exists");
+        }
+
+        existingPatient.setNom(patientDto.getNom());
+        existingPatient.setDateNaissance(patientDto.getDateNaissance());
+        existingPatient.setEmail(patientDto.getEmail());
+        existingPatient.setNumeroTelephone(patientDto.getNumeroTelephone());
+        existingPatient.setAdresse(patientDto.getAdresse());
+        existingPatient.setNumeroSecuriteSociale(patientDto.getNumeroSecuriteSociale());
+
+        Patient updatedPatient = patientRepository.save(existingPatient);
+        return convertToDto(updatedPatient);
+    }
+
+    public void deletePatient(String cin) {
+        if (!patientRepository.existsById(cin)) {
+            throw new PatientNotFoundException("Patient not found with CIN: " + cin);
+        }
+        patientRepository.deleteById(cin);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PatientDto> searchPatientsByName(String nom) {
+        return patientRepository.findByNomContainingIgnoreCase(nom).stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    private PatientDto convertToDto(Patient patient) {
+        return new PatientDto(
+            patient.getCin(),
+            patient.isMinure(),
+            patient.getGeneratedId(),
+            patient.getNom(),
+            patient.getDateNaissance(),
+            patient.getEmail(),
+            patient.getNumeroTelephone(),
+            patient.getAdresse(),
+            patient.getNumeroSecuriteSociale(),
+            patient.getCreatedAt(),
+            patient.getUpdatedAt()
+        );
+    }
+
+    private Patient convertToEntity(PatientDto dto) {
+        Patient patient = new Patient();
+        patient.setCin(dto.getCin());
+        patient.setMinure(dto.isMinure());
+        patient.setNom(dto.getNom());
+        patient.setDateNaissance(dto.getDateNaissance());
+        patient.setEmail(dto.getEmail());
+        patient.setNumeroTelephone(dto.getNumeroTelephone());
+        patient.setAdresse(dto.getAdresse());
+        patient.setNumeroSecuriteSociale(dto.getNumeroSecuriteSociale());
+        return patient;
+    }
+} 

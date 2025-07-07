@@ -34,8 +34,15 @@ public class PatientController {
     
     // Get patient by ID
     @GetMapping("/{id}")
-    public ResponseEntity<PatientDto> getPatientById(@PathVariable Long id) {
+    public ResponseEntity<PatientDto> getPatientById(@PathVariable String id) {
         PatientDto patient = patientService.getPatientById(id);
+        return ResponseEntity.ok(patient);
+    }
+    
+    // Get patient by CIN
+    @GetMapping("/cin/{cin}")
+    public ResponseEntity<PatientDto> getPatientByCin(@PathVariable String cin) {
+        PatientDto patient = patientService.getPatientByCin(cin);
         return ResponseEntity.ok(patient);
     }
     
@@ -46,9 +53,23 @@ public class PatientController {
         return ResponseEntity.ok(patient);
     }
     
+    // Get minors by parent CIN
+    @GetMapping("/minors/parent/{parentCin}")
+    public ResponseEntity<List<PatientDto>> getMinorsByParentCin(@PathVariable String parentCin) {
+        List<PatientDto> minors = patientService.getMinorsByParentCin(parentCin);
+        return ResponseEntity.ok(minors);
+    }
+    
+    // Get all minors
+    @GetMapping("/minors")
+    public ResponseEntity<List<PatientDto>> getAllMinors() {
+        List<PatientDto> minors = patientService.getAllMinors();
+        return ResponseEntity.ok(minors);
+    }
+    
     // Update patient
     @PutMapping("/{id}")
-    public ResponseEntity<PatientDto> updatePatient(@PathVariable Long id, 
+    public ResponseEntity<PatientDto> updatePatient(@PathVariable String id, 
                                                    @Valid @RequestBody PatientDto patientDto) {
         PatientDto updatedPatient = patientService.updatePatient(id, patientDto);
         return ResponseEntity.ok(updatedPatient);
@@ -56,7 +77,7 @@ public class PatientController {
     
     // Delete patient
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePatient(@PathVariable String id) {
         patientService.deletePatient(id);
         return ResponseEntity.noContent().build();
     }

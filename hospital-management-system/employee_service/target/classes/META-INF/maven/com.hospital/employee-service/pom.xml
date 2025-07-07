@@ -59,5 +59,10 @@
             <artifactId>modelmapper</artifactId>
             <version>3.1.1</version>
         </dependency>
+       <!--<dependency>
+        	<groupId>com.hospital</groupId>
+        	<artifactId>patient-service</artifactId>
+        	<version>1.0.0</version>
+        </dependency>--> 
     </dependencies>
 </project>

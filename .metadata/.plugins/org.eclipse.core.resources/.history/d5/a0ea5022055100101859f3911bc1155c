@@ -1,5 +1,0 @@
-package com.hospital.patient.exception;
-
-public class PatientNotFoundException {
-
-}

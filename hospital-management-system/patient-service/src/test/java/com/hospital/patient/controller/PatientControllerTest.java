@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -37,6 +36,7 @@ public class PatientControllerTest {
     public void testCreatePatient() throws Exception {
         // Create test data
         PatientDto patientDto = new PatientDto();
+        patientDto.setCin("F422181");
         patientDto.setNom("John Doe");
         patientDto.setEmail("john.doe@example.com");
         patientDto.setDateNaissance(LocalDate.of(1990, 1, 1));
@@ -45,7 +45,7 @@ public class PatientControllerTest {
         patientDto.setNumeroSecuriteSociale("123-45-6789");
 
         PatientDto savedPatient = new PatientDto();
-        savedPatient.setId(1L);
+        savedPatient.setCin("F422181");
         savedPatient.setNom("John Doe");
         savedPatient.setEmail("john.doe@example.com");
         savedPatient.setDateNaissance(LocalDate.of(1990, 1, 1));
@@ -68,12 +68,12 @@ public class PatientControllerTest {
     @Test
     public void testGetAllPatients() throws Exception {
         PatientDto patient1 = new PatientDto();
-        patient1.setId(1L);
+        patient1.setCin("F422181");
         patient1.setNom("John Doe");
         patient1.setEmail("john.doe@example.com");
 
         PatientDto patient2 = new PatientDto();
-        patient2.setId(2L);
+        patient2.setCin("FA70895");
         patient2.setNom("Jane Smith");
         patient2.setEmail("jane.smith@example.com");
 
@@ -92,11 +92,11 @@ public class PatientControllerTest {
     @Test
     public void testGetPatientById() throws Exception {
         PatientDto patient = new PatientDto();
-        patient.setId(1L);
+        patient.setCin("F422181");
         patient.setNom("John Doe");
         patient.setEmail("john.doe@example.com");
 
-        when(patientService.getPatientById(anyLong())).thenReturn(patient);
+        when(patientService.getPatientById(toString())).thenReturn(patient);
 
         mockMvc.perform(get("/api/patients/1"))
                 .andDo(print())

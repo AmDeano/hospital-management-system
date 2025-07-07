@@ -1,0 +1,5 @@
+package com.hospital.employee.dto;
+
+public class EmployeeDto {
+
+}
