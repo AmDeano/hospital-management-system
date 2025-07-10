@@ -1362,3 +1362,32 @@ org.eclipse.core.runtime.CoreException: Could not resolve artifact com.hospital:
 2025-07-07 02:02:04,697 [Worker-72: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
 2025-07-07 02:07:46,821 [Worker-82: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
 2025-07-07 02:07:46,826 [Worker-82: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
+2025-07-08 22:47:50,404 [Worker-6: Loading available Gradle versions] INFO  o.e.b.c.i.u.g.PublishedGradleVersions - Gradle version information cache is out-of-date. Trying to update.
+2025-07-09 00:21:03,218 [Worker-66: Creating project "front"] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.hospital:front:1.0.0 @ C:\Users\VICTUS\healthCare System\hospital-management-system\front\pom.xml.
+2025-07-09 00:21:04,429 [Worker-66: Creating project "front"] INFO  o.e.m.j.i.AbstractJavaProjectConfigurator - Adding source folder /front/src/main/java
+2025-07-09 00:21:04,440 [Worker-66: Creating project "front"] INFO  o.e.m.j.i.AbstractJavaProjectConfigurator - Adding resource folder /front/src/main/resources
+2025-07-09 00:21:04,452 [Worker-66: Creating project "front"] INFO  o.e.m.j.i.AbstractJavaProjectConfigurator - Adding source folder /front/src/test/java
+2025-07-09 00:21:04,453 [Worker-66: Creating project "front"] INFO  o.e.m.j.i.AbstractJavaProjectConfigurator - Adding resource folder /front/src/test/resources
+2025-07-09 00:21:05,698 [Worker-64: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\main\resources to target\classes
+2025-07-09 00:21:05,704 [Worker-64: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
+2025-07-09 00:21:06,949 [Worker-72: Building] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using NULL lifecycle mapping for MavenProject: com.hospital:hospital-management-system:1.0.0 @ C:\Users\VICTUS\healthCare System\hospital-management-system\pom.xml.
+2025-07-09 00:21:07,288 [Worker-72: Building] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.hospital:patient-service:1.0.0 @ C:\Users\VICTUS\healthCare System\hospital-management-system\patient-service\pom.xml.
+2025-07-09 00:21:08,609 [Worker-72: Building] WARN  o.e.m.c.i.embedder.EclipseLogger - The artifact mysql:mysql-connector-java:jar:8.0.33 has been relocated to com.mysql:mysql-connector-j:jar:8.0.33: MySQL Connector/J artifacts moved to reverse-DNS compliant Maven 2+ coordinates.
+2025-07-09 00:21:08,945 [Worker-72: Building] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.hospital:employee-service:1.0.0 @ C:\Users\VICTUS\healthCare System\hospital-management-system\employee_service\pom.xml.
+2025-07-09 00:21:09,163 [Worker-72: Building] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.hospital:front:1.0.0 @ C:\Users\VICTUS\healthCare System\hospital-management-system\front\pom.xml.
+2025-07-09 00:43:43,601 [Worker-80: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
+2025-07-09 00:43:43,623 [Worker-80: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
+2025-07-09 00:48:02,917 [Worker-66: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
+2025-07-09 00:48:02,922 [Worker-66: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
+2025-07-09 00:48:04,607 [Worker-86: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
+2025-07-09 00:48:04,613 [Worker-86: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
+2025-07-09 22:37:47,653 [Worker-5: Loading available Gradle versions] INFO  o.e.b.c.i.u.g.PublishedGradleVersions - Gradle version information cache is up-to-date. Trying to read.
+2025-07-10 00:53:42,568 [Worker-68: Cleaning all projects] WARN  o.e.m.c.i.embedder.EclipseLogger - The artifact mysql:mysql-connector-java:jar:8.0.33 has been relocated to com.mysql:mysql-connector-j:jar:8.0.33: MySQL Connector/J artifacts moved to reverse-DNS compliant Maven 2+ coordinates.
+2025-07-10 00:53:43,139 [Worker-65: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
+2025-07-10 00:53:43,148 [Worker-65: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
+2025-07-10 00:53:44,913 [Worker-68: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
+2025-07-10 00:53:44,916 [Worker-68: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
+2025-07-10 02:24:17,473 [Worker-77: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
+2025-07-10 02:24:17,477 [Worker-77: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes
+2025-07-10 02:24:18,735 [Worker-77: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
+2025-07-10 02:24:18,738 [Worker-77: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\test\resources to target\test-classes

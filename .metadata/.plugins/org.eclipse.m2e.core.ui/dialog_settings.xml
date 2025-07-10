@@ -2,6 +2,7 @@
 <section name="Workbench">
 	<section name="MavenProjectWizardLocationPage">
 		<list key="location">
+			<item value="C:\Users\VICTUS\healthCare System\hospital-management-system"/>
 			<item value="C:\Users\VICTUS\healthCare System\hospital-management-system\pom.xml"/>
 		</list>
 		<list key="projectNameTemplate">
@@ -26,13 +27,13 @@
 	</section>
 	<section name="Maven2ProjectWizardArchifactPage">
 		<list key="package">
-			<item value="org.employee_service"/>
+			<item value="org.front"/>
 		</list>
 		<list key="groupId">
 			<item value="com.hospital"/>
 		</list>
 		<list key="artifactId">
-			<item value="employee_service"/>
+			<item value="front"/>
 		</list>
 		<list key="projectNameTemplate">
 			<item value="[artifactId]"/>
@@ -53,7 +54,7 @@
 		<list key="name">
 		</list>
 		<list key="artifactId">
-			<item value="employee_service"/>
+			<item value="front"/>
 			<item value="hospital-management-system"/>
 		</list>
 		<list key="projectNameTemplate">
@@ -66,6 +67,7 @@
 		</list>
 		<list key="version">
 			<item value="1.0.0"/>
+			<item value="0.0.1-SNAPSHOT"/>
 		</list>
 	</section>
 	<section name="org.eclipse.m2e.core.pom.overview">
@@ -82,6 +84,7 @@
 	</section>
 	<section name="MavenModuleWizardParentPage">
 		<list key="moduleName">
+			<item value="front"/>
 			<item value="employee_service"/>
 			<item value="patient-service"/>
 		</list>
