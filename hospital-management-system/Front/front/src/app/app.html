@@ -1,0 +1,34 @@
+<div class="container">
+  <h1>Employee Management</h1>
+
+  <!-- Add Employee Form -->
+  <form (ngSubmit)="addEmployee()" #employeeForm="ngForm">
+    <input type="text" name="matricule" [(ngModel)]="newEmployee.matricule" placeholder="Matricule" required />
+    <input type="text" name="nom" [(ngModel)]="newEmployee.nom" placeholder="Nom" required />
+    <input type="text" name="poste" [(ngModel)]="newEmployee.poste" placeholder="Poste" required />
+    <input type="date" name="dateEmbauche" [(ngModel)]="newEmployee.dateEmbauche" required />
+    <button type="submit">Add Employee</button>
+  </form>
+
+  <hr />
+
+  <!-- Search by Matricule -->
+  <input type="text" [(ngModel)]="searchMatricule" placeholder="Enter matricule to search" />
+  <button (click)="searchEmployee()">Search</button>
+
+  <div *ngIf="searchedEmployee">
+    <h3>Employee Found:</h3>
+    <p>{{ searchedEmployee.nom }} - {{ searchedEmployee.poste }}</p>
+  </div>
+
+  <hr />
+
+  <!-- Employee List -->
+  <h2>All Employees</h2>
+  <ul>
+    <li *ngFor="let employee of employees">
+      {{ employee.nom }} - {{ employee.poste }}
+      <button (click)="deleteEmployee(employee.matricule)">Delete</button>
+    </li>
+  </ul>
+</div>
