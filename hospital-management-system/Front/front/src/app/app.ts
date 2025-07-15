@@ -58,3 +58,7 @@ export class App implements OnInit {
   }
 }
 
+}
+      });
+    }
+  }

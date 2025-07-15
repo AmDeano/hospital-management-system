@@ -1,34 +1,349 @@
 <div class="container">
-  <h1>Employee Management</h1>
+  <h1>Employee Management System</h1>
 
-  <!-- Add Employee Form -->
-  <form (ngSubmit)="addEmployee()" #employeeForm="ngForm">
-    <input type="text" name="matricule" [(ngModel)]="newEmployee.matricule" placeholder="Matricule" required />
-    <input type="text" name="nom" [(ngModel)]="newEmployee.nom" placeholder="Nom" required />
-    <input type="text" name="poste" [(ngModel)]="newEmployee.poste" placeholder="Poste" required />
-    <input type="date" name="dateEmbauche" [(ngModel)]="newEmployee.dateEmbauche" required />
-    <button type="submit">Add Employee</button>
-  </form>
+  <!-- Add/Edit Employee Form -->
+  <div class="form-section">
+    <h2>{{ editingEmployee ? 'Edit Employee' : 'Add New Employee' }}</h2>
+    <form (ngSubmit)="saveEmployee()" #employeeForm="ngForm">
+      <div class="form-grid">
+        <!-- Basic Information -->
+        <div class="form-group">
+          <label for="matricule">Matricule *</label>
+          <input type="text" id="matricule" name="matricule" 
+                 [(ngModel)]="newEmployee.matricule" 
+                 placeholder="Employee ID" 
+                 [readonly]="editingEmployee"
+                 required />
+        </div>
+
+        <div class="form-group">
+          <label for="nom">Last Name *</label>
+          <input type="text" id="nom" name="nom" 
+                 [(ngModel)]="newEmployee.nom" 
+                 placeholder="Last Name" 
+                 required />
+        </div>
+
+        <div class="form-group">
+          <label for="prenom">First Name *</label>
+          <input type="text" id="prenom" name="prenom" 
+                 [(ngModel)]="newEmployee.prenom" 
+                 placeholder="First Name" 
+                 required />
+        </div>
+
+        <div class="form-group">
+          <label for="poste">Position *</label>
+          <input type="text" id="poste" name="poste" 
+                 [(ngModel)]="newEmployee.poste" 
+                 placeholder="Job Position" 
+                 required />
+        </div>
+
+        <div class="form-group">
+          <label for="employeeType">Employee Type *</label>
+          <select id="employeeType" name="employeeType" 
+                  [(ngModel)]="newEmployee.employeeType" 
+                  required>
+            <option value="">Select Type</option>
+            <option value="ADMINISTRATION">Administration</option>
+            <option value="MEDICAL_STAFF">Medical Staff</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="departement">Department</label>
+          <input type="text" id="departement" name="departement" 
+                 [(ngModel)]="newEmployee.departement" 
+                 placeholder="Department" />
+        </div>
+
+        <!-- Contact Information -->
+        <div class="form-group">
+          <label for="telephone">Phone</label>
+          <input type="tel" id="telephone" name="telephone" 
+                 [(ngModel)]="newEmployee.telephone" 
+                 placeholder="Phone Number" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" 
+                 [(ngModel)]="newEmployee.email" 
+                 placeholder="Email Address" />
+        </div>
+
+        <div class="form-group">
+          <label for="adresse">Address</label>
+          <input type="text" id="adresse" name="adresse" 
+                 [(ngModel)]="newEmployee.adresse" 
+                 placeholder="Address" />
+        </div>
+
+        <!-- Dates -->
+        <div class="form-group">
+          <label for="dateEmbauche">Hire Date *</label>
+          <input type="date" id="dateEmbauche" name="dateEmbauche" 
+                 [(ngModel)]="newEmployee.dateEmbauche" 
+                 required />
+        </div>
+
+        <div class="form-group">
+          <label for="dateNaissance">Birth Date</label>
+          <input type="date" id="dateNaissance" name="dateNaissance" 
+                 [(ngModel)]="newEmployee.dateNaissance" />
+        </div>
+
+        <!-- Identification -->
+        <div class="form-group">
+          <label for="cin">CIN</label>
+          <input type="text" id="cin" name="cin" 
+                 [(ngModel)]="newEmployee.cin" 
+                 placeholder="National ID" />
+        </div>
+
+        <div class="form-group">
+          <label for="numeroSecuriteSociale">Social Security Number</label>
+          <input type="text" id="numeroSecuriteSociale" name="numeroSecuriteSociale" 
+                 [(ngModel)]="newEmployee.numeroSecuriteSociale" 
+                 placeholder="SSN" />
+        </div>
+
+        <!-- Medical Staff Specific -->
+        <div class="form-group" *ngIf="newEmployee.employeeType === 'MEDICAL_STAFF'">
+          <label for="specialite">Speciality</label>
+          <input type="text" id="specialite" name="specialite" 
+                 [(ngModel)]="newEmployee.specialite" 
+                 placeholder="Medical Speciality" />
+        </div>
+
+        <div class="form-group" *ngIf="newEmployee.employeeType === 'MEDICAL_STAFF'">
+          <label for="licenceNumber">License Number</label>
+          <input type="text" id="licenceNumber" name="licenceNumber" 
+                 [(ngModel)]="newEmployee.licenceNumber" 
+                 placeholder="Professional License" />
+        </div>
+
+        <!-- Supervisor -->
+        <div class="form-group">
+          <label for="supervisorMatricule">Supervisor ID</label>
+          <input type="text" id="supervisorMatricule" name="supervisorMatricule" 
+                 [(ngModel)]="newEmployee.supervisorMatricule" 
+                 placeholder="Supervisor Matricule" />
+        </div>
+
+        <!-- Work Schedule -->
+        <div class="form-group">
+          <label for="shiftStart">Shift Start</label>
+          <input type="time" id="shiftStart" name="shiftStart" 
+                 [(ngModel)]="newEmployee.shiftStart" />
+        </div>
+
+        <div class="form-group">
+          <label for="shiftEnd">Shift End</label>
+          <input type="time" id="shiftEnd" name="shiftEnd" 
+                 [(ngModel)]="newEmployee.shiftEnd" />
+        </div>
+
+        <!-- Work Days -->
+        <div class="form-group work-days">
+          <label>Work Days</label>
+          <div class="checkbox-group">
+            <label *ngFor="let day of workDays">
+              <input type="checkbox" 
+                     [checked]="isWorkDaySelected(day)"
+                     (change)="toggleWorkDay(day)" />
+              {{ getWorkDayLabel(day) }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="newEmployee.isActive" name="isActive" />
+            Active Employee
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="!employeeForm.form.valid">
+          {{ editingEmployee ? 'Update Employee' : 'Add Employee' }}
+        </button>
+        <button type="button" (click)="cancelEdit()" *ngIf="editingEmployee">
+          Cancel
+        </button>
+        <button type="button" (click)="clearForm()">
+          Clear Form
+        </button>
+      </div>
+    </form>
+  </div>
 
   <hr />
 
-  <!-- Search by Matricule -->
-  <input type="text" [(ngModel)]="searchMatricule" placeholder="Enter matricule to search" />
-  <button (click)="searchEmployee()">Search</button>
+  <!-- Search Section -->
+  <div class="search-section">
+    <h2>Search Employees</h2>
+    
+    <!-- Quick Search -->
+    <div class="search-group">
+      <h3>Quick Search</h3>
+      <input type="text" [(ngModel)]="searchMatricule" placeholder="Enter matricule" />
+      <button (click)="searchByMatricule()">Search by ID</button>
+      
+      <input type="text" [(ngModel)]="searchEmail" placeholder="Enter email" />
+      <button (click)="searchByEmail()">Search by Email</button>
+      
+      <input type="text" [(ngModel)]="searchCin" placeholder="Enter CIN" />
+      <button (click)="searchByCin()">Search by CIN</button>
+    </div>
 
-  <div *ngIf="searchedEmployee">
-    <h3>Employee Found:</h3>
-    <p>{{ searchedEmployee.nom }} - {{ searchedEmployee.poste }}</p>
+    <!-- Advanced Search -->
+    <div class="search-group">
+      <h3>Advanced Search</h3>
+      <div class="search-form">
+        <input type="text" [(ngModel)]="searchCriteria.nom" placeholder="Last Name" />
+        <input type="text" [(ngModel)]="searchCriteria.prenom" placeholder="First Name" />
+        <select [(ngModel)]="searchCriteria.departement">
+          <option value="">All Departments</option>
+          <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+        </select>
+        <select [(ngModel)]="searchCriteria.employeeType">
+          <option value="">All Types</option>
+          <option value="ADMINISTRATION">Administration</option>
+          <option value="MEDICAL_STAFF">Medical Staff</option>
+        </select>
+        <select [(ngModel)]="searchCriteria.isActive">
+          <option value="">All Status</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+        <button (click)="performAdvancedSearch()">Advanced Search</button>
+      </div>
+    </div>
+
+    <!-- Search Results -->
+    <div *ngIf="searchResults.length > 0" class="search-results">
+      <h3>Search Results ({{ searchResults.length }})</h3>
+      <div class="employee-grid">
+        <div *ngFor="let employee of searchResults" class="employee-card">
+          <h4>{{ employee.nom }} {{ employee.prenom }}</h4>
+          <p><strong>ID:</strong> {{ employee.matricule }}</p>
+          <p><strong>Position:</strong> {{ employee.poste }}</p>
+          <p><strong>Department:</strong> {{ employee.departement }}</p>
+          <p><strong>Type:</strong> {{ getEmployeeTypeLabel(employee.employeeType) }}</p>
+          <p><strong>Status:</strong> {{ employee.isActive ? 'Active' : 'Inactive' }}</p>
+          <div class="card-actions">
+            <button (click)="editEmployee(employee)">Edit</button>
+            <button (click)="deleteEmployee(employee.matricule)" class="delete-btn">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- Filters and Views -->
+  <div class="filter-section">
+    <h2>Filter Employees</h2>
+    <div class="filter-buttons">
+      <button (click)="loadAllEmployees()">All Employees</button>
+      <button (click)="loadActiveEmployees()">Active Only</button>
+      <button (click)="loadInactiveEmployees()">Inactive Only</button>
+      <button (click)="loadAdministrationEmployees()">Administration</button>
+      <button (click)="loadMedicalStaff()">Medical Staff</button>
+    </div>
   </div>
 
   <hr />
 
   <!-- Employee List -->
-  <h2>All Employees</h2>
-  <ul>
-    <li *ngFor="let employee of employees">
-      {{ employee.nom }} - {{ employee.poste }}
-      <button (click)="deleteEmployee(employee.matricule)">Delete</button>
-    </li>
-  </ul>
+  <div class="employee-list">
+    <h2>Employees ({{ employees.length }})</h2>
+    <div class="list-controls">
+      <select [(ngModel)]="sortBy" (change)="sortEmployees()">
+        <option value="nom">Sort by Name</option>
+        <option value="matricule">Sort by ID</option>
+        <option value="dateEmbauche">Sort by Hire Date</option>
+        <option value="departement">Sort by Department</option>
+      </select>
+      <label>
+        <input type="checkbox" [(ngModel)]="showInactive" (change)="toggleInactiveDisplay()" />
+        Show Inactive
+      </label>
+    </div>
+
+    <div class="employee-table">
+      <table *ngIf="employees.length > 0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Department</th>
+            <th>Type</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Hire Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let employee of filteredEmployees" 
+              [class.inactive]="!employee.isActive">
+            <td>{{ employee.matricule }}</td>
+            <td>{{ employee.nom }} {{ employee.prenom }}</td>
+            <td>{{ employee.poste }}</td>
+            <td>{{ employee.departement }}</td>
+            <td>{{ getEmployeeTypeLabel(employee.employeeType) }}</td>
+            <td>{{ employee.email }}</td>
+            <td>{{ employee.telephone }}</td>
+            <td>{{ employee.dateEmbauche | date:'shortDate' }}</td>
+            <td>
+              <span [class]="employee.isActive ? 'status-active' : 'status-inactive'">
+                {{ employee.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <button (click)="editEmployee(employee)" class="edit-btn">Edit</button>
+              <button (click)="deleteEmployee(employee.matricule)" class="delete-btn">Delete</button>
+              <button (click)="toggleEmployeeStatus(employee)" class="status-btn">
+                {{ employee.isActive ? 'Deactivate' : 'Activate' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="employees.length === 0" class="no-employees">
+        No employees found.
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="statistics-section">
+    <h2>Statistics</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Total Employees</h3>
+        <p>{{ employees.length }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Active Employees</h3>
+        <p>{{ getActiveEmployeeCount() }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Medical Staff</h3>
+        <p>{{ getMedicalStaffCount() }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Administration</h3>
+        <p>{{ getAdministrationCount() }}</p>
+      </div>
+    </div>
+  </div>
 </div>
