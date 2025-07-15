@@ -37,7 +37,7 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
-        
+		
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -63,6 +63,11 @@
         	<groupId>com.hospital</groupId>
         	<artifactId>patient-service</artifactId>
         	<version>1.0.0</version>
-        </dependency>--> 
+        </dependency>-->
+       <dependency>
+       	<groupId>com.hospital</groupId>
+       	<artifactId>patient-service</artifactId>
+       	<version>1.0.0</version>
+       </dependency>
     </dependencies>
 </project>
