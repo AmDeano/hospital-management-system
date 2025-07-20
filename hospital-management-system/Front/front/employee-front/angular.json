@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "front": {
+    "employee-front": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "front:build:production"
+              "buildTarget": "employee-front:build:production"
             },
             "development": {
-              "buildTarget": "front:build:development"
+              "buildTarget": "employee-front:build:development"
             }
           },
           "defaultConfiguration": "development"

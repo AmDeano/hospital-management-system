@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
+import com.hospital.employee.entity.EmployeeType;
+import com.hospital.employee.entity.WorkDay;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -288,21 +290,4 @@ public class EmployeeDto {
     public boolean isAdministration() {
         return employeeType == EmployeeType.ADMINISTRATION;
     }
-}
-
-// Enum for Employee Type
-enum EmployeeType {
-    ADMINISTRATION,
-    MEDICAL_STAFF
-}
-
-// Enum for Work Days
-enum WorkDay {
-    MONDAY,
-    TUESDAY,
-    WEDNESDAY,
-    THURSDAY,
-    FRIDAY,
-    SATURDAY,
-    SUNDAY
 }

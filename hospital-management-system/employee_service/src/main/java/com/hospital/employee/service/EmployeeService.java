@@ -460,7 +460,7 @@ public class EmployeeService {
         }
     }
 
-    private String generateMatricule(Enum<com.hospital.employee.dto.EmployeeType> employeeType) {
+    private String generateMatricule(EmployeeType employeeType) {
         String prefix = employeeType == EmployeeType.MEDICAL_STAFF ? "MED" : "ADM";
         String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyMM"));
         

@@ -1,0 +1,24 @@
+<!-- src/app/employees/employee-list/employee-list.component.html -->
+<h2>Employee List</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Matricule</th>
+      <th>Nom</th>
+      <th>Prénom</th>
+      <th>Poste</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let emp of employees">
+      <td>{{ emp.matricule }}</td>
+      <td>{{ emp.nom }}</td>
+      <td>{{ emp.prenom }}</td>
+      <td>{{ emp.poste }}</td>
+      <td>
+        <button (click)="deleteEmployee(emp.matricule)">Delete</button>
+      </td>
+    </tr>
+  </tbody>
+</table>

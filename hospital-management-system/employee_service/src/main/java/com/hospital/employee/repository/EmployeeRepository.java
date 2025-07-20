@@ -15,6 +15,9 @@ import java.util.Set;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
     
+	// Add this method
+    Optional<Employee> findByLicenceNumber(String licenceNumber);
+    
     // Find by email
     Optional<Employee> findByEmail(String email);
     

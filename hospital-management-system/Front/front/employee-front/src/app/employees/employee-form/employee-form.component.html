@@ -1,0 +1,12 @@
+<!-- src/app/employees/employee-form/employee-form.component.html -->
+<form (ngSubmit)="submit()">
+  <input type="text" placeholder="Nom" [(ngModel)]="employee.nom" name="nom" required />
+  <input type="text" placeholder="Prenom" [(ngModel)]="employee.prenom" name="prenom" required />
+  <input type="text" placeholder="Poste" [(ngModel)]="employee.poste" name="poste" required />
+  <input type="text" placeholder="Departement" [(ngModel)]="employee.departement" name="departement" required />
+  <select [(ngModel)]="employee.employeeType" name="employeeType">
+    <option value="ADMINISTRATION">Administration</option>
+    <option value="MEDICAL_STAFF">Medical Staff</option>
+  </select>
+  <button type="submit">Add</button>
+</form>
