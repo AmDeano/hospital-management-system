@@ -20,7 +20,7 @@ describe('EmployeeService', () => {
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { EmployeeService } from './employee.service';
-import { Employee, SearchCriteria } from '../app.component';
+import { Employee } from './employee.model';
 
 describe('EmployeeService', () => {
   let service: EmployeeService;
@@ -34,7 +34,7 @@ describe('EmployeeService', () => {
     email: 'john.doe@hospital.com',
     poste: 'Doctor',
     departement: 'Emergency',
-    employeeType: 'MEDICAL',
+    employeeType: 'MEDICAL_STAFF',
     dateEmbauche: '2023-01-15',
     workDays: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
     isActive: true

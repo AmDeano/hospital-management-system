@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
-import { EmployeeService } from './services/employee.service';
+import { EmployeeService } from './employees/employee.service';
 
 describe('AppComponent', () => {
   beforeEach(async () => {

@@ -1,36 +1,9 @@
 // src/app/app.component.ts
-/*
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
-})
-export class AppComponent {
-  title = 'employee-front';
-}
-*/
 
 import { Component, OnInit } from '@angular/core';
 import { EmployeeService } from './employees/employee.service';
+import { Employee } from './employees/employee.model';
 
-// Employee interface
-export interface Employee {
-  matricule: string;
-  nom: string;
-  prenom: string;
-  cin?: string;
-  email?: string;
-  poste: string;
-  departement?: string;
-  employeeType: 'MEDICAL' | 'ADMINISTRATION' | 'SUPPORT';
-  dateEmbauche: string;
-  workDays?: string[];
-  isActive?: boolean;
-}
-
-// Search criteria interface
 export interface SearchCriteria {
   nom: string;
   prenom: string;
@@ -45,33 +18,16 @@ export interface SearchCriteria {
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  
-  // Employee management properties
   employees: Employee[] = [];
   filteredEmployees: Employee[] = [];
   searchResults: Employee[] = [];
-  
-  // Form properties
-  newEmployee: Employee = {
-    matricule: '',
-    nom: '',
-    prenom: '',
-    cin: '',
-    email: '',
-    poste: '',
-    departement: '',
-    employeeType: 'ADMINISTRATION',
-    dateEmbauche: '',
-    workDays: [],
-    isActive: true
-  };
-  
+
+  newEmployee: Employee = this.getEmptyEmployee();
   editingEmployee: Employee | null = null;
-  
-  // Search properties
-  searchMatricule: string = '';
-  searchEmail: string = '';
-  searchCin: string = '';
+
+  searchMatricule = '';
+  searchEmail = '';
+  searchCin = '';
   searchCriteria: SearchCriteria = {
     nom: '',
     prenom: '',
@@ -79,77 +35,138 @@ export class AppComponent implements OnInit {
     employeeType: '',
     isActive: ''
   };
-  
-  // Display properties
-  sortBy: string = 'nom';
-  showInactive: boolean = false;
-  
-  // Static data
-  workDays: string[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
-  departments: string[] = ['Emergency', 'Surgery', 'Pediatrics', 'Cardiology', 'Administration', 'IT', 'HR'];
-  
+
+  sortBy: keyof Employee = 'nom';
+  showInactive = false;
+
+  readonly workDays = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+  readonly departments = ['Emergency', 'Surgery', 'Pediatrics', 'Cardiology', 'Administration', 'IT', 'HR'];
+
   constructor(private employeeService: EmployeeService) {}
-  
+
   ngOnInit() {
     this.loadEmployees();
   }
-  
-  // Employee CRUD operations
+
+  // --- CRUD ---
+
   loadEmployees() {
     this.employeeService.getAllEmployees().subscribe({
-      next: (data) => {
+      next: data => {
         this.employees = data;
-        this.filterEmployees();
+        this.applyFilters();
       },
-      error: (error) => {
-        console.error('Error loading employees:', error);
+      error: err => {
+        console.error('Error loading employees:', err);
         this.employees = [];
-        this.filterEmployees();
+        this.applyFilters();
       }
     });
   }
-  
+
   saveEmployee() {
-    if (this.editingEmployee) {
-      // Update existing employee
-      this.employeeService.updateEmployee(this.editingEmployee.matricule, this.newEmployee)
-        .subscribe({
-          next: (updated) => {
-            const index = this.employees.findIndex(emp => emp.matricule === updated.matricule);
-            if (index !== -1) {
-              this.employees[index] = updated;
-            }
-            this.resetForm();
-            this.filterEmployees();
-          },
-          error: (error) => console.error('Error updating employee:', error)
-        });
-    } else {
-      // Add new employee
-      this.employeeService.createEmployee(this.newEmployee)
-        .subscribe({
-          next: (created) => {
-            this.employees.push(created);
-            this.resetForm();
-            this.filterEmployees();
-          },
-          error: (error) => console.error('Error creating employee:', error)
-        });
-    }
+    const req = this.editingEmployee
+      ? this.employeeService.updateEmployee(this.editingEmployee.matricule, this.newEmployee)
+      : this.employeeService.createEmployee(this.newEmployee);
+
+    req.subscribe({
+      next: saved => {
+        if (this.editingEmployee) {
+          const idx = this.employees.findIndex(e => e.matricule === saved.matricule);
+          if (idx !== -1) this.employees[idx] = saved;
+        } else {
+          this.employees.push(saved);
+        }
+        this.resetForm();
+        this.applyFilters();
+      },
+      error: err => console.error('Error saving employee:', err)
+    });
   }
-  
-  editEmployee(employee: Employee) {
-    this.editingEmployee = { ...employee };
-    this.newEmployee = { ...employee };
+
+  editEmployee(emp: Employee) {
+    this.editingEmployee = { ...emp };
+    this.newEmployee = { ...emp };
   }
-  
+
   cancelEdit() {
     this.resetForm();
   }
-  
+
+  toggleEmployeeStatus(emp: Employee) {
+    const updated = { ...emp, isActive: !emp.isActive };
+    this.employeeService.updateEmployee(emp.matricule, updated).subscribe({
+      next: saved => {
+        const idx = this.employees.findIndex(e => e.matricule === saved.matricule);
+        if (idx !== -1) this.employees[idx] = saved;
+        this.applyFilters();
+      },
+      error: err => console.error('Error toggling status:', err)
+    });
+  }
+
+  // --- Search ---
+
+  searchByMatricule() {
+    if (!this.searchMatricule.trim()) return;
+    this.employeeService.getEmployeeById(this.searchMatricule).subscribe({
+      next: emp => this.searchResults = [emp],
+      error: () => this.searchResults = []
+    });
+  }
+
+  searchByEmail() {
+    if (!this.searchEmail.trim()) return;
+    this.employeeService.searchByEmail(this.searchEmail).subscribe({
+      next: res => this.searchResults = res,
+      error: err => console.error(err)
+    });
+  }
+
+  searchByCin() {
+    if (!this.searchCin.trim()) return;
+    this.employeeService.searchByCin(this.searchCin).subscribe({
+      next: res => this.searchResults = res,
+      error: err => console.error(err)
+    });
+  }
+
+  performAdvancedSearch() {
+    this.employeeService.advancedSearch(this.searchCriteria).subscribe({
+      next: res => this.searchResults = res,
+      error: err => console.error(err)
+    });
+  }
+
+  // --- Filters/Sort ---
+
+  applyFilters() {
+    this.filteredEmployees = this.showInactive
+      ? [...this.employees]
+      : this.employees.filter(e => e.isActive);
+    this.sortEmployees();
+  }
+
+  sortEmployees() {
+    this.filteredEmployees.sort((a, b) =>
+      (a[this.sortBy] || '').toString().localeCompare((b[this.sortBy] || '').toString())
+    );
+  }
+
+  toggleInactiveDisplay() {
+    this.showInactive = !this.showInactive;
+    this.applyFilters();
+  }
+
+  // --- Helpers ---
+
   resetForm() {
     this.editingEmployee = null;
-    this.newEmployee = {
+    this.newEmployee = this.getEmptyEmployee();
+  }
+
+  getEmptyEmployee(): Employee {
+    return {
       matricule: '',
       nom: '',
       prenom: '',
@@ -163,159 +180,45 @@ export class AppComponent implements OnInit {
       isActive: true
     };
   }
-  
-  clearForm() {
-    this.resetForm();
-  }
-  
-  toggleEmployeeStatus(employee: Employee) {
-    const updatedEmployee = { ...employee, isActive: !employee.isActive };
-    this.employeeService.updateEmployee(employee.matricule, updatedEmployee)
-      .subscribe({
-        next: (updated) => {
-          const index = this.employees.findIndex(emp => emp.matricule === updated.matricule);
-          if (index !== -1) {
-            this.employees[index] = updated;
-          }
-          this.filterEmployees();
-        },
-        error: (error) => console.error('Error updating employee status:', error)
-      });
-  }
-  
-  // Search operations
-  searchByMatricule() {
-    if (this.searchMatricule.trim()) {
-      this.employeeService.getEmployeeById(this.searchMatricule)
-        .subscribe({
-          next: (employee) => this.searchResults = [employee],
-          error: (error) => {
-            console.error('Employee not found:', error);
-            this.searchResults = [];
-          }
-        });
-    }
-  }
-  
-  searchByEmail() {
-    if (this.searchEmail.trim()) {
-      this.employeeService.searchByEmail(this.searchEmail)
-        .subscribe({
-          next: (employees) => this.searchResults = employees,
-          error: (error) => console.error('Search error:', error)
-        });
-    }
-  }
-  
-  searchByCin() {
-    if (this.searchCin.trim()) {
-      this.employeeService.searchByCin(this.searchCin)
-        .subscribe({
-          next: (employees) => this.searchResults = employees,
-          error: (error) => console.error('Search error:', error)
-        });
-    }
-  }
-  
-  performAdvancedSearch() {
-    this.employeeService.advancedSearch(this.searchCriteria)
-      .subscribe({
-        next: (employees) => this.searchResults = employees,
-        error: (error) => console.error('Advanced search error:', error)
-      });
-  }
-  
-  // Filter and sort operations
-  loadAllEmployees() {
-    this.loadEmployees();
-  }
-  
-  loadActiveEmployees() {
-    this.filteredEmployees = this.employees.filter(emp => emp.isActive);
-  }
-  
-  loadInactiveEmployees() {
-    this.filteredEmployees = this.employees.filter(emp => !emp.isActive);
-  }
-  
-  loadAdministrationEmployees() {
-    this.filteredEmployees = this.employees.filter(emp => emp.employeeType === 'ADMINISTRATION');
-  }
-  
-  loadMedicalStaff() {
-    this.filteredEmployees = this.employees.filter(emp => emp.employeeType === 'MEDICAL');
-  }
-  
-  sortEmployees() {
-    this.filteredEmployees.sort((a, b) => {
-      const aValue = a[this.sortBy as keyof Employee] as string;
-      const bValue = b[this.sortBy as keyof Employee] as string;
-      return aValue.localeCompare(bValue);
-    });
-  }
-  
-  toggleInactiveDisplay() {
-    this.filterEmployees();
-  }
-  
-  filterEmployees() {
-    this.filteredEmployees = this.showInactive 
-      ? this.employees 
-      : this.employees.filter(emp => emp.isActive);
-    this.sortEmployees();
-  }
-  
-  // Work days management
-  isWorkDaySelected(day: string): boolean {
-    return this.newEmployee.workDays?.includes(day) || false;
-  }
-  
+
   toggleWorkDay(day: string) {
-    if (!this.newEmployee.workDays) {
-      this.newEmployee.workDays = [];
-    }
-    
-    const index = this.newEmployee.workDays.indexOf(day);
-    if (index > -1) {
-      this.newEmployee.workDays.splice(index, 1);
+    const days = this.newEmployee.workDays || [];
+    const idx = days.indexOf(day);
+    if (idx > -1) {
+      days.splice(idx, 1);
     } else {
-      this.newEmployee.workDays.push(day);
+      days.push(day);
     }
+    this.newEmployee.workDays = days;
   }
-  
-  getWorkDayLabel(day: string): string {
-    const labels: { [key: string]: string } = {
-      'MONDAY': 'Monday',
-      'TUESDAY': 'Tuesday',
-      'WEDNESDAY': 'Wednesday',
-      'THURSDAY': 'Thursday',
-      'FRIDAY': 'Friday',
-      'SATURDAY': 'Saturday',
-      'SUNDAY': 'Sunday'
-    };
-    return labels[day] || day;
+
+  isWorkDaySelected(day: string): boolean {
+    return this.newEmployee.workDays?.includes(day) ?? false;
   }
-  
-  // Helper methods
+
   getEmployeeTypeLabel(type: string): string {
-    const labels: { [key: string]: string } = {
+    return {
       'MEDICAL': 'Medical Staff',
       'ADMINISTRATION': 'Administration',
       'SUPPORT': 'Support Staff'
-    };
-    return labels[type] || type;
+    }[type] || type;
   }
-  
-  // Statistics methods
-  getActiveEmployeeCount(): number {
-    return this.employees.filter(emp => emp.isActive).length;
+
+  getWorkDayLabel(day: string): string {
+    return day.charAt(0) + day.slice(1).toLowerCase();
   }
-  
-  getMedicalStaffCount(): number {
-    return this.employees.filter(emp => emp.employeeType === 'MEDICAL' && emp.isActive).length;
+
+  // --- Stats ---
+
+  getActiveEmployeeCount() {
+    return this.employees.filter(e => e.isActive).length;
   }
-  
-  getAdministrationCount(): number {
-    return this.employees.filter(emp => emp.employeeType === 'ADMINISTRATION' && emp.isActive).length;
+
+  getMedicalStaffCount() {
+    return this.employees.filter(e => e.employeeType === 'MEDICAL_STAFF' && e.isActive).length;
+  }
+
+  getAdministrationCount() {
+    return this.employees.filter(e => e.employeeType === 'ADMINISTRATION' && e.isActive).length;
   }
 }

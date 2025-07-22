@@ -6,6 +6,7 @@ import { Employee } from '../employee.model';
 
 @Component({
   selector: 'app-employee-form',
+  standalone: true,
   templateUrl: './employee-form.component.html',
 })
 export class EmployeeFormComponent {

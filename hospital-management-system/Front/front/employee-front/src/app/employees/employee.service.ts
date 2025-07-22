@@ -36,7 +36,8 @@ export class EmployeeService {
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Employee, SearchCriteria } from '../app.component';
+import { Employee } from './employee.model';
+import { SearchCriteria } from '../app.component';
 
 @Injectable()
 export class EmployeeService {
@@ -59,6 +60,10 @@ export class EmployeeService {
   createEmployee(employee: Employee): Observable<Employee> {
     return this.http.post<Employee>(this.API_URL, employee);
   }
+  
+  add(employee: Employee): Observable<Employee> {
+      return this.http.post<Employee>(this.API_URL, employee);
+    }
 
   // Update employee
   updateEmployee(matricule: string, employee: Employee): Observable<Employee> {
