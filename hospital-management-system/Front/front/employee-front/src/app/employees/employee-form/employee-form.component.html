@@ -1,12 +1,378 @@
 <!-- src/app/employees/employee-form/employee-form.component.html -->
-<form (ngSubmit)="submit()">
-  <input type="text" placeholder="Nom"  name="nom" required />
-  <input type="text" placeholder="Prenom"  name="prenom" required />
-  <input type="text" placeholder="Poste"  name="poste" required />
-  <input type="text" placeholder="Departement"  name="departement" required />
-  <select  name="employeeType">
-    <option value="ADMINISTRATION">Administration</option>
-    <option value="MEDICAL_STAFF">Medical Staff</option>
-  </select>
-  <button type="submit">Add</button>
-</form>
+<div class="employee-form-container">
+  <!-- Header Section -->
+  <header class="form-header">
+    <h1 class="form-title">
+      {{ isEditMode ? 'Edit Employee' : 'Add New Employee' }}
+    </h1>
+    <p class="form-subtitle" *ngIf="!isEditMode">
+      Fill in the information below to add a new employee to the system.
+    </p>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container" role="status" aria-live="polite">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">
+      {{ isEditMode ? 'Loading employee data...' : 'Saving employee...' }}
+    </p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" 
+       class="error-container" 
+       role="alert" 
+       aria-live="assertive">
+    <svg class="error-icon" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+    </svg>
+    <span class="error-text">{{ error }}</span>
+  </div>
+
+  <!-- Main Form -->
+  <form *ngIf="!loading" 
+        (ngSubmit)="onSubmit()" 
+        class="employee-form"
+        novalidate
+        #employeeForm="ngForm">
+    
+    <!-- Basic Information Section -->
+    <section class="form-section" aria-labelledby="basic-info-heading">
+      <h2 id="basic-info-heading" class="section-title">
+        <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+        Basic Information
+      </h2>
+      
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="matricule" class="field-label required">
+            Employee ID (Matricule)
+          </label>
+          <input 
+            type="text" 
+            id="matricule"
+            name="matricule"
+            [(ngModel)]="employee.matricule" 
+            required
+            [disabled]="isEditMode"
+            [attr.aria-describedby]="isEditMode ? 'matricule-help' : null"
+            class="field-input"
+            #matricule="ngModel">
+          <small *ngIf="isEditMode" id="matricule-help" class="field-help">
+            Employee ID cannot be changed after creation
+          </small>
+          <div *ngIf="matricule.invalid && matricule.touched" class="field-error">
+            Employee ID is required
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="employeeType" class="field-label required">
+            Employee Type
+          </label>
+          <select 
+            id="employeeType"
+            name="employeeType"
+            [(ngModel)]="employee.employeeType" 
+            (change)="onEmployeeTypeChange()"
+            required
+            class="field-select"
+            #employeeType="ngModel">
+            <option value="" disabled>Select employee type</option>
+            <option value="ADMINISTRATION">Administration</option>
+            <option value="MEDICAL_STAFF">Medical Staff</option>
+          </select>
+          <div *ngIf="employeeType.invalid && employeeType.touched" class="field-error">
+            Please select an employee type
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="nom" class="field-label required">Last Name</label>
+          <input 
+            type="text" 
+            id="nom"
+            name="nom"
+            [(ngModel)]="employee.nom" 
+            required
+            class="field-input"
+            #nom="ngModel">
+          <div *ngIf="nom.invalid && nom.touched" class="field-error">
+            Last name is required
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="prenom" class="field-label required">First Name</label>
+          <input 
+            type="text" 
+            id="prenom"
+            name="prenom"
+            [(ngModel)]="employee.prenom" 
+            required
+            class="field-input"
+            #prenom="ngModel">
+          <div *ngIf="prenom.invalid && prenom.touched" class="field-error">
+            First name is required
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="poste" class="field-label required">Position</label>
+          <input 
+            type="text" 
+            id="poste"
+            name="poste"
+            [(ngModel)]="employee.poste" 
+            required
+            class="field-input"
+            #poste="ngModel">
+          <div *ngIf="poste.invalid && poste.touched" class="field-error">
+            Position is required
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="departement" class="field-label">Department</label>
+          <input 
+            type="text" 
+            id="departement"
+            name="departement"
+            [(ngModel)]="employee.departement" 
+            class="field-input">
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Information Section -->
+    <section class="form-section" aria-labelledby="contact-info-heading">
+      <h2 id="contact-info-heading" class="section-title">
+        <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        Contact Information
+      </h2>
+      
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="email" class="field-label">Email Address</label>
+          <input 
+            type="email" 
+            id="email"
+            name="email"
+            [(ngModel)]="employee.email" 
+            class="field-input"
+            #email="ngModel">
+          <div *ngIf="email.invalid && email.touched" class="field-error">
+            Please enter a valid email address
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="telephone" class="field-label">Phone Number</label>
+          <input 
+            type="tel" 
+            id="telephone"
+            name="telephone"
+            [(ngModel)]="employee.telephone" 
+            class="field-input">
+        </div>
+
+        <div class="form-field form-field-full">
+          <label for="adresse" class="field-label">Address</label>
+          <textarea 
+            id="adresse"
+            name="adresse"
+            [(ngModel)]="employee.adresse" 
+            rows="3"
+            class="field-textarea"
+            placeholder="Enter full address"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- Personal Information Section -->
+    <section class="form-section" aria-labelledby="personal-info-heading">
+      <h2 id="personal-info-heading" class="section-title">
+        <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+        </svg>
+        Personal Information
+      </h2>
+      
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="dateNaissance" class="field-label">Birth Date</label>
+          <input 
+            type="date" 
+            id="dateNaissance"
+            name="dateNaissance"
+            [(ngModel)]="employee.dateNaissance" 
+            class="field-input">
+        </div>
+
+        <div class="form-field">
+          <label for="dateEmbauche" class="field-label required">Hire Date</label>
+          <input 
+            type="date" 
+            id="dateEmbauche"
+            name="dateEmbauche"
+            [(ngModel)]="employee.dateEmbauche" 
+            required
+            class="field-input"
+            #dateEmbauche="ngModel">
+          <div *ngIf="dateEmbauche.invalid && dateEmbauche.touched" class="field-error">
+            Hire date is required
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="cin" class="field-label">National ID (CIN)</label>
+          <input 
+            type="text" 
+            id="cin"
+            name="cin"
+            [(ngModel)]="employee.cin" 
+            class="field-input">
+        </div>
+
+        <div class="form-field">
+          <label for="numeroSecuriteSociale" class="field-label">
+            Social Security Number
+          </label>
+          <input 
+            type="text" 
+            id="numeroSecuriteSociale"
+            name="numeroSecuriteSociale"
+            [(ngModel)]="employee.numeroSecuriteSociale" 
+            class="field-input">
+        </div>
+      </div>
+    </section>
+
+    <!-- Medical Staff Section -->
+    <section *ngIf="isMedicalStaff()" 
+             class="form-section medical-section" 
+             aria-labelledby="medical-info-heading">
+      <h2 id="medical-info-heading" class="section-title">
+        <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
+        </svg>
+        Medical Staff Information
+      </h2>
+      
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="specialite" class="field-label">Medical Specialty</label>
+          <input 
+            type="text" 
+            id="specialite"
+            name="specialite"
+            [(ngModel)]="employee.specialite" 
+            class="field-input"
+            placeholder="e.g., Cardiology, Pediatrics">
+        </div>
+
+        <div class="form-field">
+          <label for="licenceNumber" class="field-label">License Number</label>
+          <input 
+            type="text" 
+            id="licenceNumber"
+            name="licenceNumber"
+            [(ngModel)]="employee.licenceNumber" 
+            class="field-input"
+            placeholder="Professional license number">
+        </div>
+      </div>
+    </section>
+
+    <!-- Work Schedule Section -->
+    <section class="form-section" aria-labelledby="schedule-info-heading">
+      <h2 id="schedule-info-heading" class="section-title">
+        <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+          <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+        </svg>
+        Work Schedule
+      </h2>
+      
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="shiftStart" class="field-label">Shift Start Time</label>
+          <input 
+            type="time" 
+            id="shiftStart"
+            name="shiftStart"
+            [(ngModel)]="employee.shiftStart" 
+            class="field-input">
+        </div>
+
+        <div class="form-field">
+          <label for="shiftEnd" class="field-label">Shift End Time</label>
+          <input 
+            type="time" 
+            id="shiftEnd"
+            name="shiftEnd"
+            [(ngModel)]="employee.shiftEnd" 
+            class="field-input">
+        </div>
+
+        <div class="form-field form-field-full">
+          <label class="field-label">Work Days</label>
+          <div class="checkbox-grid" role="group" aria-label="Select work days">
+            <label *ngFor="let day of availableWorkDays" 
+                   class="checkbox-item">
+              <input 
+                type="checkbox"
+                [checked]="selectedWorkDays[day]"
+                (change)="onWorkDayChange(day, $event.target?.checked || false)"
+                class="checkbox-input"
+                [id]="'workday-' + day.toLowerCase()">
+              <span class="checkbox-label">{{ day }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="supervisorMatricule" class="field-label">
+            Supervisor ID
+          </label>
+          <input 
+            type="text" 
+            id="supervisorMatricule"
+            name="supervisorMatricule"
+            [(ngModel)]="employee.supervisorMatricule" 
+            class="field-input"
+            placeholder="Enter supervisor's matricule">
+        </div>
+      </div>
+    </section>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button 
+        type="button" 
+        (click)="cancel()" 
+        class="btn btn-secondary"
+        [disabled]="loading">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+        Cancel
+      </button>
+      
+      <button 
+        type="submit" 
+        class="btn btn-primary"
+        [disabled]="loading || employeeForm.invalid">
+        <svg *ngIf="!loading" class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        <div *ngIf="loading" class="btn-spinner"></div>
+        {{ isEditMode ? 'Update Employee' : 'Create Employee' }}
+      </button>
+    </div>
+  </form>
+</div>

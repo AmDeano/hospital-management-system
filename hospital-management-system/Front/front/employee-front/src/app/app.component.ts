@@ -1,5 +1,5 @@
 // src/app/app.component.ts
-
+/*
 import { Component, OnInit } from '@angular/core';
 import { EmployeeService } from './employees/employee.service';
 import { Employee } from './employees/employee.model';
@@ -221,4 +221,24 @@ export class AppComponent implements OnInit {
   getAdministrationCount() {
     return this.employees.filter(e => e.employeeType === 'ADMINISTRATION' && e.isActive).length;
   }
+}
+*/
+import { Component } from '@angular/core';
+import { RouterOutlet, RouterLink } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, RouterLink],
+  template: `
+    <nav>
+      <a routerLink="/employees">Employee List</a> |
+      <a routerLink="/employees/add">Add Employee</a>
+    </nav>
+    <router-outlet></router-outlet>
+  `,
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'hospital-management-system';
 }

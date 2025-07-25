@@ -36,13 +36,15 @@ export class EmployeeService {
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Employee } from './employee.model';
-import { SearchCriteria } from '../app.component';
+import { Employee, SearchCriteria } from './employee.model';
 
-@Injectable()
+
+@Injectable({
+	providedIn :'root'
+})
 export class EmployeeService {
   
-  private readonly API_URL = 'http://localhost:8080/api/employees';
+  private readonly API_URL = 'http://localhost:8082/employee-service/api/employees';
 
   constructor(private http: HttpClient) {}
 
@@ -61,9 +63,9 @@ export class EmployeeService {
     return this.http.post<Employee>(this.API_URL, employee);
   }
   
-  add(employee: Employee): Observable<Employee> {
-      return this.http.post<Employee>(this.API_URL, employee);
-    }
+  //add(employee: Employee): Observable<Employee> {
+      //return this.http.post<Employee>(this.API_URL, employee);
+    //}
 
   // Update employee
   updateEmployee(matricule: string, employee: Employee): Observable<Employee> {
@@ -88,17 +90,25 @@ export class EmployeeService {
   }
 
   // Advanced search
-  advancedSearch(criteria: SearchCriteria): Observable<Employee[]> {
-    let params = new HttpParams();
-    
-    Object.entries(criteria).forEach(([key, value]) => {
-      if (value && value.trim()) {
-        params = params.set(key, value);
-      }
-    });
-    
-    return this.http.get<Employee[]>(`${this.API_URL}/search/advanced`, { params });
-  }
+  advancedSearch(filters: {
+      nom?: string;
+      prenom?: string;
+      departement?: string;
+      employeeType?: string;
+      isActive?: boolean;
+    }): Observable<Employee[]> {
+      let params = new HttpParams();
+
+      // Only append if value is provided
+      Object.keys(filters).forEach(key => {
+        const value = filters[key as keyof typeof filters];
+        if (value !== null && value !== undefined && value !== '') {
+          params = params.set(key, value.toString());
+        }
+      });
+
+      return this.http.get<Employee[]>(`${this.API_URL}/search`, { params });
+    }
 
   // Get employees by type
   getEmployeesByType(employeeType: string): Observable<Employee[]> {
