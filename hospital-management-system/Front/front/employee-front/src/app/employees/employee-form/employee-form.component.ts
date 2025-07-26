@@ -1,37 +1,4 @@
 // src/app/employees/employee-form/employee-form.component.ts
-/*
-import { Component } from '@angular/core';
-import { EmployeeService } from '../employee.service';
-import { Employee } from '../employee.model';
-
-@Component({
-  selector: 'app-employee-form',
-  standalone: true,
-  templateUrl: './employee-form.component.html',
-})
-export class EmployeeFormComponent {
-  employee: Employee = {
-    matricule: '',
-    nom: '',
-    prenom: '',
-    poste: '',
-    employeeType: 'ADMINISTRATION',
-    departement: '',
-    dateEmbauche: new Date().toISOString().split('T')[0]
-  };
-
-  constructor(private service: EmployeeService) {}
-
-  submit() {
-    this.service.add(this.employee).subscribe(() => {
-      alert('Employee added!');
-    });
-  }
-}
-*/
-
-// src/app/employees/employee-form/employee-form.component.ts
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -53,7 +20,8 @@ export class EmployeeFormComponent implements OnInit {
     prenom: '',
     poste: '',
     employeeType: EmployeeType.ADMINISTRATION,
-    dateEmbauche: new Date().toISOString().split('T')[0], // Today's date
+    // Remove the default date to avoid validation issues
+    dateEmbauche: '',
     workDays: []
   };
 
@@ -143,8 +111,7 @@ export class EmployeeFormComponent implements OnInit {
             this.router.navigate(['/employees']);
           },
           error: (error) => {
-            this.error = 'Error updating employee: ' + error.message;
-            this.loading = false;
+            this.handleServerError(error);
           }
         });
       } else {
@@ -153,11 +120,30 @@ export class EmployeeFormComponent implements OnInit {
             this.router.navigate(['/employees']);
           },
           error: (error) => {
-            this.error = 'Error creating employee: ' + error.message;
-            this.loading = false;
+            this.handleServerError(error);
           }
         });
       }
+    }
+  }
+
+  private handleServerError(error: any): void {
+    this.loading = false;
+    
+    // Handle validation errors from the server
+    if (error.status === 400 && error.error) {
+      if (error.error.message) {
+        this.error = error.error.message;
+      } else if (error.error.errors) {
+        // Handle field validation errors
+        const fieldErrors = error.error.errors;
+        const errorMessages = fieldErrors.map((err: any) => err.defaultMessage).join(', ');
+        this.error = errorMessages;
+      } else {
+        this.error = 'Validation failed. Please check your input.';
+      }
+    } else {
+      this.error = 'Error saving employee: ' + (error.message || 'Unknown error occurred');
     }
   }
 
@@ -174,13 +160,32 @@ export class EmployeeFormComponent implements OnInit {
       return false;
     }
 
-    // Validate dates
+    // Validate that hire date is not in the future
+    const hireDate = new Date(this.employee.dateEmbauche);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // Set to end of today to allow today's date
+    
+    if (hireDate > today) {
+      this.error = 'Hire date cannot be in the future.';
+      return false;
+    }
+
+    // Validate dates relationship
     if (this.employee.dateNaissance && this.employee.dateEmbauche) {
       const birthDate = new Date(this.employee.dateNaissance);
-      const hireDate = new Date(this.employee.dateEmbauche);
+      const hireDateValidation = new Date(this.employee.dateEmbauche);
       
-      if (birthDate >= hireDate) {
+      if (birthDate >= hireDateValidation) {
         this.error = 'Birth date must be before hire date.';
+        return false;
+      }
+      
+      // Check if person is at least 16 years old at hire date
+      const minimumAge = new Date(birthDate);
+      minimumAge.setFullYear(minimumAge.getFullYear() + 16);
+      
+      if (hireDateValidation < minimumAge) {
+        this.error = 'Employee must be at least 16 years old at hire date.';
         return false;
       }
     }
@@ -207,5 +212,17 @@ export class EmployeeFormComponent implements OnInit {
 
   isMedicalStaff(): boolean {
     return this.employee.employeeType === EmployeeType.MEDICAL_STAFF;
+  }
+
+  // Helper method to get maximum date for hire date input (today)
+  getMaxHireDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  // Helper method to get maximum date for birth date (must be at least 16 years ago)
+  getMaxBirthDate(): string {
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() - 16);
+    return maxDate.toISOString().split('T')[0];
   }
 }

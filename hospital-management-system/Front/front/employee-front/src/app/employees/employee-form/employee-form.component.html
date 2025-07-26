@@ -209,8 +209,10 @@
             type="date" 
             id="dateNaissance"
             name="dateNaissance"
-            [(ngModel)]="employee.dateNaissance" 
+            [(ngModel)]="employee.dateNaissance"
+            [max]="getMaxBirthDate()"
             class="field-input">
+          <small class="field-help">Employee must be at least 16 years old</small>
         </div>
 
         <div class="form-field">
@@ -221,8 +223,10 @@
             name="dateEmbauche"
             [(ngModel)]="employee.dateEmbauche" 
             required
+            [max]="getMaxHireDate()"
             class="field-input"
             #dateEmbauche="ngModel">
+          <small class="field-help">Hire date cannot be in the future</small>
           <div *ngIf="dateEmbauche.invalid && dateEmbauche.touched" class="field-error">
             Hire date is required
           </div>
