@@ -1,37 +1,4 @@
 // src/app/employees/employee.service.ts
-/*
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Employee } from './employee.model';
-import { Observable } from 'rxjs';
-
-@Injectable({ providedIn: 'root' })
-export class EmployeeService {
-  private baseUrl = 'http://localhost:8082/employee-service/api/employees';
-
-  constructor(private http: HttpClient) {}
-
-  getAll(): Observable<Employee[]> {
-    return this.http.get<Employee[]>(this.baseUrl);
-  }
-
-  getById(matricule: string): Observable<Employee> {
-    return this.http.get<Employee>(`${this.baseUrl}/${matricule}`);
-  }
-
-  add(employee: Employee): Observable<Employee> {
-    return this.http.post<Employee>(this.baseUrl, employee);
-  }
-
-  update(matricule: string, employee: Employee): Observable<Employee> {
-    return this.http.put<Employee>(`${this.baseUrl}/${matricule}`, employee);
-  }
-
-  delete(matricule: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${matricule}`);
-  }
-}
-*/
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
