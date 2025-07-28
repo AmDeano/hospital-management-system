@@ -212,7 +212,7 @@
             [(ngModel)]="employee.dateNaissance"
             [max]="getMaxBirthDate()"
             class="field-input">
-          <small class="field-help">Employee must be at least 16 years old</small>
+          <small class="field-help">Employee must be at least 22 years old</small>
         </div>
 
         <div class="form-field">
@@ -331,7 +331,7 @@
               <input 
                 type="checkbox"
                 [checked]="selectedWorkDays[day]"
-                (change)="onWorkDayChange(day, $event.target?.checked || false)"
+                (change)="onWorkDayChange(day, $event)"
                 class="checkbox-input"
                 [id]="'workday-' + day.toLowerCase()">
               <span class="checkbox-label">{{ day }}</span>

@@ -83,7 +83,8 @@ export class EmployeeFormComponent implements OnInit {
     });
   }
 
-  onWorkDayChange(day: WorkDay, checked: boolean): void {
+  onWorkDayChange(day: WorkDay, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
     this.selectedWorkDays[day] = checked;
     
     // Update the employee's work days array
