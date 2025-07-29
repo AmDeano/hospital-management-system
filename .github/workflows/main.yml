@@ -1,0 +1,47 @@
+name: CI - Spring Boot + Angular
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    ### Set up Java for Spring Boot
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    ### Build Backend Microservices
+    - name: Build Spring Boot Microservices (Maven)
+      run: mvn clean install -DskipTests
+      working-directory: ./ # Assumes root pom.xml manages all modules
+
+    - name: Run Backend Tests
+      run: mvn test
+      working-directory: ./
+
+    ### Set up Node for Angular
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    ### Install Angular Dependencies
+    - name: Install frontend dependencies
+      run: npm install
+      working-directory: ./Front/front/employee-front
+
+    ### Build Angular Frontend
+    - name: Build Angular App
+      run: npm run build
+      working-directory: ./Front/front/employee-front
