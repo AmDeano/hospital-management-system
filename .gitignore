@@ -1,3 +1,19 @@
-/.metadata/
+# Eclipse
 .metadata/
-.metadata/
+.settings/
+.classpath
+.project
+
+# Maven
+target/
+
+# Logs
+*.log
+
+# Node (Angular)
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
