@@ -24,7 +24,7 @@ jobs:
     ### Build Backend Microservices
     - name: Build Spring Boot Microservices (Maven)
       run: mvn clean install -DskipTests
-      working-directory: hospital-management-system # Assumes root pom.xml manages all modules
+      #working-directory: hospital-management-system 
 
     - name: Run Backend Tests
       run: mvn test
