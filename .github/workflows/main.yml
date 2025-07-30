@@ -28,7 +28,7 @@ jobs:
 
     - name: Run Backend Tests
       run: mvn test
-      working-directory: ./
+      working-directory: hospital-management-system
 
     ### Set up Node for Angular
     - name: Set up Node.js
