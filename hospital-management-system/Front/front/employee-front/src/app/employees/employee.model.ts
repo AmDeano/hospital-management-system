@@ -2,7 +2,8 @@
 
 export enum EmployeeType {
   MEDICAL_STAFF = 'MEDICAL_STAFF',
-  ADMINISTRATION = 'ADMINISTRATION'
+  ADMINISTRATION = 'ADMINISTRATION',
+  ADMINISTRATION = 'RH'
 }
 
 export enum WorkDay {
