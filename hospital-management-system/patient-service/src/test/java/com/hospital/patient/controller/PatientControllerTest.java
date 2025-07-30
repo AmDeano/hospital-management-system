@@ -43,7 +43,7 @@ public class PatientControllerTest {
         patientDto.setNumeroTelephone("123456789");
         patientDto.setAdresse("123 Main St");
         patientDto.setNumeroSecuriteSociale("123-45-6789");
-
+        
         PatientDto savedPatient = new PatientDto();
         savedPatient.setCin("F422181");
         savedPatient.setNom("John Doe");
@@ -52,6 +52,7 @@ public class PatientControllerTest {
         savedPatient.setNumeroTelephone("123456789");
         savedPatient.setAdresse("123 Main St");
         savedPatient.setNumeroSecuriteSociale("123-45-6789");
+        
 
         when(patientService.createPatient(any(PatientDto.class))).thenReturn(savedPatient);
 
@@ -95,6 +96,7 @@ public class PatientControllerTest {
         patient.setCin("F422181");
         patient.setNom("John Doe");
         patient.setEmail("john.doe@example.com");
+        
 
         when(patientService.getPatientById(toString())).thenReturn(patient);
 
