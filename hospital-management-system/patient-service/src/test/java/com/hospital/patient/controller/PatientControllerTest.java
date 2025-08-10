@@ -85,7 +85,7 @@ public class PatientControllerTest {
         mockMvc.perform(put("/api/patients/CIN123456")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(samplePatient)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value("CIN123456"));
     }
 
