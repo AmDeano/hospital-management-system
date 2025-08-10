@@ -54,7 +54,7 @@ public class PatientControllerTest {
         mockMvc.perform(post("/api/patients")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(samplePatient)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nom").value("John Doe"))
                 .andExpect(jsonPath("$.email").value("john@example.com"));
     }
@@ -85,7 +85,7 @@ public class PatientControllerTest {
         mockMvc.perform(put("/api/patients/CIN123456")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(samplePatient)))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("CIN123456"));
     }
 
@@ -94,6 +94,6 @@ public class PatientControllerTest {
         doNothing().when(patientService).deletePatient("CIN123456");
 
         mockMvc.perform(delete("/api/patients/CIN123456"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 }
