@@ -23,7 +23,7 @@
 
     <modules>
         <!-- Microservices will be added here -->
-        <!-- <module>patient-service</module> -->
+        <module>patient-service</module>
         <!-- <module>employee-service</module> -->
         <!-- <module>consultation-service</module> -->
         <!-- <module>config-server</module> -->

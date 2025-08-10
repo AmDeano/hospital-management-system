@@ -3,7 +3,7 @@
 export enum EmployeeType {
   MEDICAL_STAFF = 'MEDICAL_STAFF',
   ADMINISTRATION = 'ADMINISTRATION',
-  ADMINISTRATION = 'RH'
+  //ADMINISTRATION = 'RH'
 }
 
 export enum WorkDay {
