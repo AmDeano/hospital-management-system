@@ -4,7 +4,9 @@ import com.hospital.employee.dto.EmployeeDto;
 import com.hospital.employee.entity.EmployeeType;
 import com.hospital.employee.entity.WorkDay;
 import com.hospital.employee.service.EmployeeService;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +48,9 @@ class EmployeeControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(employeeController).build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+     // Serialize enums as their names, not using toString()
+        objectMapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, false);
+        objectMapper.configure(DeserializationFeature.READ_ENUMS_USING_TO_STRING, false);
 
         testEmployeeDto = createTestEmployeeDto();
     }
