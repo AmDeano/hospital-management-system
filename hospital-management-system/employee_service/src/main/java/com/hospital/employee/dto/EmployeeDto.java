@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hospital.employee.entity.EmployeeType;
 import com.hospital.employee.entity.WorkDay;
 
@@ -235,7 +238,8 @@ public class EmployeeDto {
     public void setSupervisorMatricule(String supervisorMatricule) {
         this.supervisorMatricule = supervisorMatricule;
     }
-
+    @JsonProperty("workDays")
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
     public Set<WorkDay> getWorkDays() {
         return workDays;
     }

@@ -73,7 +73,7 @@ public enum WorkDay {
 
     @Override
     public String toString() {
-        return displayName;
+        return name();
     }
 
     // Optional: for deserialization from string to enum
