@@ -51,7 +51,7 @@ public class PatientControllerTest {
     void shouldCreatePatient() throws Exception {
         when(patientService.createPatient(any(PatientDto.class))).thenReturn(samplePatient);
 
-        mockMvc.perform(post("/patients")
+        mockMvc.perform(post("/api/patients")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(samplePatient)))
                 .andExpect(status().isOk())
@@ -63,7 +63,7 @@ public class PatientControllerTest {
     void shouldGetAllPatients() throws Exception {
         when(patientService.getAllPatients()).thenReturn(Collections.singletonList(samplePatient));
 
-        mockMvc.perform(get("/patients"))
+        mockMvc.perform(get("/api/patients"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value("CIN123456"));
     }
@@ -72,7 +72,7 @@ public class PatientControllerTest {
     void shouldGetPatientById() throws Exception {
         when(patientService.getPatientById("CIN123456")).thenReturn(samplePatient);
 
-        mockMvc.perform(get("/patients/CIN123456"))
+        mockMvc.perform(get("/api/patients/CIN123456"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nom").value("John Doe"));
     }
@@ -82,7 +82,7 @@ public class PatientControllerTest {
         when(patientService.updatePatient(eq("CIN123456"), any(PatientDto.class)))
                 .thenReturn(samplePatient);
 
-        mockMvc.perform(put("/patients/CIN123456")
+        mockMvc.perform(put("/api/patients/CIN123456")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(samplePatient)))
                 .andExpect(status().isOk())
@@ -93,7 +93,7 @@ public class PatientControllerTest {
     void shouldDeletePatient() throws Exception {
         doNothing().when(patientService).deletePatient("CIN123456");
 
-        mockMvc.perform(delete("/patients/CIN123456"))
+        mockMvc.perform(delete("/api/patients/CIN123456"))
                 .andExpect(status().isOk());
     }
 }
