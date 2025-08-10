@@ -45,8 +45,7 @@ class EmployeeControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(employeeController).build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        
-        // Create test employee DTO
+
         testEmployeeDto = createTestEmployeeDto();
     }
 
@@ -62,7 +61,6 @@ class EmployeeControllerTest {
         return dto;
     }
 
-    // Basic CRUD Operations Tests
     @Test
     void createEmployee_ShouldReturnCreatedEmployee() throws Exception {
         when(employeeService.createEmployee(any(EmployeeDto.class))).thenReturn(testEmployeeDto);
@@ -96,7 +94,7 @@ class EmployeeControllerTest {
     void getEmployeeByMatricule_ShouldReturnEmployee() throws Exception {
         when(employeeService.getEmployeeByMatricule("EMP001")).thenReturn(testEmployeeDto);
 
-        mockMvc.perform(get("/api/employees/EMP001"))
+        mockMvc.perform(get("/api/employees/{matricule}", "EMP001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.matricule").value("EMP001"))
                 .andExpect(jsonPath("$.nom").value("Doe"));
@@ -108,7 +106,7 @@ class EmployeeControllerTest {
     void updateEmployee_ShouldReturnUpdatedEmployee() throws Exception {
         when(employeeService.updateEmployee(eq("EMP001"), any(EmployeeDto.class))).thenReturn(testEmployeeDto);
 
-        mockMvc.perform(put("/api/employees/EMP001")
+        mockMvc.perform(put("/api/employees/{matricule}", "EMP001")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testEmployeeDto)))
                 .andExpect(status().isOk())
@@ -121,7 +119,7 @@ class EmployeeControllerTest {
     void deleteEmployee_ShouldReturnNoContent() throws Exception {
         doNothing().when(employeeService).deleteEmployee("EMP001");
 
-        mockMvc.perform(delete("/api/employees/EMP001"))
+        mockMvc.perform(delete("/api/employees/{matricule}", "EMP001"))
                 .andExpect(status().isNoContent());
 
         verify(employeeService).deleteEmployee("EMP001");
@@ -131,25 +129,24 @@ class EmployeeControllerTest {
     void activateEmployee_ShouldReturnActivatedEmployee() throws Exception {
         when(employeeService.activateEmployee("EMP001")).thenReturn(testEmployeeDto);
 
-        mockMvc.perform(patch("/api/employees/EMP001/activate"))
+        mockMvc.perform(patch("/api/employees/{matricule}/activate", "EMP001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.matricule").value("EMP001"));
 
         verify(employeeService).activateEmployee("EMP001");
     }
 
-    // Employee Type Based Queries Tests
     @Test
     void getEmployeesByType_ShouldReturnEmployeesByType() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
-        when(employeeService.getEmployeesByType(EmployeeType.ADMINISTRATION)).thenReturn(employees);
+        when(employeeService.getEmployeesByType(EmployeeType.MEDICAL_STAFF)).thenReturn(employees);
 
-        mockMvc.perform(get("/api/employees/type/DOCTOR"))
+        mockMvc.perform(get("/api/employees/type/{employeeType}", "DOCTOR"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1));
 
-        verify(employeeService).getEmployeesByType(EmployeeType.ADMINISTRATION);
+        verify(employeeService).getEmployeesByType(EmployeeType.MEDICAL_STAFF);
     }
 
     @Test
@@ -176,13 +173,12 @@ class EmployeeControllerTest {
         verify(employeeService).getMedicalStaff();
     }
 
-    // Department Based Queries Tests
     @Test
     void getEmployeesByDepartment_ShouldReturnEmployeesByDepartment() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
         when(employeeService.getEmployeesByDepartment("Cardiology")).thenReturn(employees);
 
-        mockMvc.perform(get("/api/employees/department/Cardiology"))
+        mockMvc.perform(get("/api/employees/department/{departement}", "Cardiology"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1));
@@ -193,23 +189,22 @@ class EmployeeControllerTest {
     @Test
     void getEmployeesByDepartmentAndType_ShouldReturnFilteredEmployees() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
-        when(employeeService.getEmployeesByDepartmentAndType("Cardiology", EmployeeType.ADMINISTRATION))
+        when(employeeService.getEmployeesByDepartmentAndType("Cardiology", EmployeeType.MEDICAL_STAFF))
                 .thenReturn(employees);
 
-        mockMvc.perform(get("/api/employees/department/Cardiology/type/DOCTOR"))
+        mockMvc.perform(get("/api/employees/department/{departement}/type/{employeeType}", "Cardiology", "DOCTOR"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
-        verify(employeeService).getEmployeesByDepartmentAndType("Cardiology", EmployeeType.ADMINISTRATION);
+        verify(employeeService).getEmployeesByDepartmentAndType("Cardiology", EmployeeType.MEDICAL_STAFF);
     }
 
-    // Medical Staff Specific Queries Tests
     @Test
     void getMedicalStaffBySpeciality_ShouldReturnMedicalStaffBySpeciality() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
         when(employeeService.getMedicalStaffBySpeciality("Cardiology")).thenReturn(employees);
 
-        mockMvc.perform(get("/api/employees/medical-staff/speciality/Cardiology"))
+        mockMvc.perform(get("/api/employees/medical-staff/speciality/{specialite}", "Cardiology"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
@@ -221,27 +216,25 @@ class EmployeeControllerTest {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
         when(employeeService.getAvailableDoctorsByWorkDay(WorkDay.MONDAY)).thenReturn(employees);
 
-        mockMvc.perform(get("/api/employees/doctors/available/MONDAY"))
+        mockMvc.perform(get("/api/employees/doctors/available/{workDay}", "MONDAY"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
         verify(employeeService).getAvailableDoctorsByWorkDay(WorkDay.MONDAY);
     }
 
-    // Supervisor and Hierarchy Queries Tests
     @Test
     void getEmployeesBySupervisor_ShouldReturnEmployeesBySupervisor() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
         when(employeeService.getEmployeesBySupervisor("SUP001")).thenReturn(employees);
 
-        mockMvc.perform(get("/api/employees/supervisor/SUP001"))
+        mockMvc.perform(get("/api/employees/supervisor/{supervisorMatricule}", "SUP001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
         verify(employeeService).getEmployeesBySupervisor("SUP001");
     }
 
-    // Status Based Queries Tests
     @Test
     void getActiveEmployees_ShouldReturnActiveEmployees() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
@@ -254,12 +247,10 @@ class EmployeeControllerTest {
         verify(employeeService).getActiveEmployees();
     }
 
-    // Search Operations Tests
     @Test
     void searchEmployees_WithAllParams_ShouldReturnSearchResults() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
-        when(employeeService.searchEmployees(anyString(), anyString(), anyString(), 
-                any(EmployeeType.class), anyBoolean())).thenReturn(employees);
+        when(employeeService.searchEmployees(anyString(), anyString(), anyString(), any(EmployeeType.class), anyBoolean())).thenReturn(employees);
 
         mockMvc.perform(get("/api/employees/search")
                 .param("nom", "Doe")
@@ -270,15 +261,13 @@ class EmployeeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
-        verify(employeeService).searchEmployees("Doe", "John", "Cardiology", 
-                EmployeeType.ADMINISTRATION, true);
+        verify(employeeService).searchEmployees("Doe", "John", "Cardiology", EmployeeType.MEDICAL_STAFF, true);
     }
 
     @Test
     void searchEmployees_WithNoParams_ShouldWork() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
-        when(employeeService.searchEmployees(isNull(), isNull(), isNull(), isNull(), isNull()))
-                .thenReturn(employees);
+        when(employeeService.searchEmployees(null, null, null, null, null)).thenReturn(employees);
 
         mockMvc.perform(get("/api/employees/search"))
                 .andExpect(status().isOk())
@@ -300,13 +289,11 @@ class EmployeeControllerTest {
         verify(employeeService).searchEmployeesByName("John");
     }
 
-    // Date Range Queries Tests
     @Test
     void getEmployeesByHireDateRange_ShouldReturnEmployeesInDateRange() throws Exception {
         List<EmployeeDto> employees = Arrays.asList(testEmployeeDto);
         LocalDate startDate = LocalDate.of(2023, 1, 1);
         LocalDate endDate = LocalDate.of(2023, 12, 31);
-        
         when(employeeService.getEmployeesByHireDateRange(startDate, endDate)).thenReturn(employees);
 
         mockMvc.perform(get("/api/employees/hire-date-range")
@@ -318,14 +305,13 @@ class EmployeeControllerTest {
         verify(employeeService).getEmployeesByHireDateRange(startDate, endDate);
     }
 
-    // Statistics and Analytics Tests
     @Test
     void getEmployeeStatistics_ShouldReturnStatistics() throws Exception {
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("totalEmployees", 100);
         statistics.put("activeEmployees", 95);
         statistics.put("doctorsCount", 30);
-        
+
         when(employeeService.getEmployeeStatistics()).thenReturn(statistics);
 
         mockMvc.perform(get("/api/employees/statistics"))
@@ -337,7 +323,6 @@ class EmployeeControllerTest {
         verify(employeeService).getEmployeeStatistics();
     }
 
-    // Health check endpoint test
     @Test
     void healthCheck_ShouldReturnHealthMessage() throws Exception {
         mockMvc.perform(get("/api/employees/health"))
