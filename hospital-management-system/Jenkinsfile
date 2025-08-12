@@ -1,291 +1,63 @@
 pipeline {
     agent any
-    
+
     tools {
-        jdk 'JDK17' // Make sure this matches your Jenkins JDK installation name
-        nodejs 'NodeJS18' // Make sure this matches your Jenkins Node.js installation name
-        maven 'Maven' // Make sure this matches your Jenkins Maven installation name
+        jdk 'JDK17'       // Jenkins tool name for JDK 17
+        maven 'Maven'     // Jenkins tool name for Maven
+        nodejs 'NodeJS18' // Jenkins tool name for Node.js 18
     }
-    
+
     environment {
         JAVA_HOME = tool('JDK17')
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
-        DOCKER_REGISTRY = 'your-docker-registry.com' // Replace with your registry
-        IMAGE_TAG = "${BUILD_NUMBER}-${GIT_COMMIT.substring(0,7)}"
-        PATIENT_SERVICE_IMAGE = "${DOCKER_REGISTRY}/hospital-patient-service:${IMAGE_TAG}"
-        EMPLOYEE_SERVICE_IMAGE = "${DOCKER_REGISTRY}/hospital-employee-service:${IMAGE_TAG}"
-        FRONTEND_IMAGE = "${DOCKER_REGISTRY}/hospital-frontend:${IMAGE_TAG}"
     }
-    
+
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                // Checkout code from repository
                 checkout scm
             }
         }
-        
-        stage('Build Spring Boot Microservices') {
+
+        stage('Build Backend') {
             steps {
-                echo 'Building Spring Boot Microservices with Maven...'
                 dir('hospital-management-system') {
                     sh 'mvn clean install -DskipTests'
                 }
             }
         }
-        
+
         stage('Run Backend Tests') {
-            parallel {
-                stage('Test Patient Service') {
-                    steps {
-                        echo 'Running patient service tests...'
-                        dir('hospital-management-system') {
-                            sh 'mvn test -pl patient-service'
-                        }
-                    }
-                    post {
-                        always {
-                            publishTestResults testResultsPattern: 'hospital-management-system/patient-service/target/surefire-reports/*.xml'
-                        }
-                    }
-                }
-                stage('Test Employee Service') {
-                    steps {
-                        echo 'Running employee service tests...'
-                        dir('hospital-management-system') {
-                            sh 'mvn test -pl employee_service'
-                        }
-                    }
-                    post {
-                        always {
-                            publishTestResults testResultsPattern: 'hospital-management-system/employee_service/target/surefire-reports/*.xml'
-                        }
-                    }
+            steps {
+                dir('hospital-management-system') {
+                    sh 'mvn test'
                 }
             }
         }
-        
+
         stage('Install Frontend Dependencies') {
             steps {
-                echo 'Installing Angular dependencies...'
-                dir('./Front/front/employee-front') {
+                dir('Front/front/employee-front') {
                     sh 'npm install'
                 }
             }
         }
-        
-        stage('Build Angular Frontend') {
+
+        stage('Build Frontend') {
             steps {
-                echo 'Building Angular application...'
-                dir('./Front/front/employee-front') {
+                dir('Front/front/employee-front') {
                     sh 'npm run build'
                 }
             }
         }
-        
-        stage('Build Docker Images') {
-            parallel {
-                stage('Build Patient Service Image') {
-                    steps {
-                        echo 'Building Patient Service Docker image...'
-                        script {
-                            dir('hospital-management-system') {
-                                def patientImage = docker.build("${PATIENT_SERVICE_IMAGE}", "-f patient-service/Dockerfile .")
-                                docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-registry-credentials') {
-                                    patientImage.push()
-                                    patientImage.push("latest")
-                                }
-                            }
-                        }
-                    }
-                }
-                stage('Build Employee Service Image') {
-                    steps {
-                        echo 'Building Employee Service Docker image...'
-                        script {
-                            dir('hospital-management-system') {
-                                def employeeImage = docker.build("${EMPLOYEE_SERVICE_IMAGE}", "-f employee_service/Dockerfile .")
-                                docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-registry-credentials') {
-                                    employeeImage.push()
-                                    employeeImage.push("latest")
-                                }
-                            }
-                        }
-                    }
-                }
-                stage('Build Frontend Image') {
-                    steps {
-                        echo 'Building Angular Docker image...'
-                        script {
-                            dir('./Front/front/employee-front') {
-                                def frontendImage = docker.build("${FRONTEND_IMAGE}")
-                                docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-registry-credentials') {
-                                    frontendImage.push()
-                                    frontendImage.push("latest")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Security Scan') {
-            parallel {
-                stage('Patient Service Security Scan') {
-                    steps {
-                        echo 'Scanning patient service image for vulnerabilities...'
-                        script {
-                            sh """
-                                # Using Trivy for vulnerability scanning
-                                trivy image --exit-code 0 --severity HIGH,CRITICAL ${PATIENT_SERVICE_IMAGE} || true
-                            """
-                        }
-                    }
-                }
-                stage('Employee Service Security Scan') {
-                    steps {
-                        echo 'Scanning employee service image for vulnerabilities...'
-                        script {
-                            sh """
-                                # Using Trivy for vulnerability scanning
-                                trivy image --exit-code 0 --severity HIGH,CRITICAL ${EMPLOYEE_SERVICE_IMAGE} || true
-                            """
-                        }
-                    }
-                }
-                stage('Frontend Security Scan') {
-                    steps {
-                        echo 'Scanning frontend image for vulnerabilities...'
-                        script {
-                            sh """
-                                # Using Trivy for vulnerability scanning
-                                trivy image --exit-code 0 --severity HIGH,CRITICAL ${FRONTEND_IMAGE} || true
-                            """
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Deploy to Staging') {
-            when {
-                branch 'develop'
-            }
-            steps {
-                echo 'Deploying to staging environment...'
-                script {
-                    sh """
-                        # Update docker-compose with new image tags
-                        sed -i 's|hospital-patient-service:.*|hospital-patient-service:${IMAGE_TAG}|g' docker-compose.staging.yml
-                        sed -i 's|hospital-employee-service:.*|hospital-employee-service:${IMAGE_TAG}|g' docker-compose.staging.yml
-                        sed -i 's|hospital-frontend:.*|hospital-frontend:${IMAGE_TAG}|g' docker-compose.staging.yml
-                        
-                        # Deploy to staging
-                        docker-compose -f docker-compose.staging.yml down
-                        docker-compose -f docker-compose.staging.yml up -d
-                        
-                        # Wait for services to be healthy
-                        echo "Waiting for services to start..."
-                        sleep 60
-                        
-                        # Check service health
-                        curl -f http://localhost:8081/patient-service/actuator/health || echo "Patient service health check failed"
-                        curl -f http://localhost:8082/employee-service/actuator/health || echo "Employee service health check failed"
-                        
-                        docker-compose -f docker-compose.staging.yml ps
-                    """
-                }
-            }
-        }
-        
-        stage('Deploy to Production') {
-            when {
-                branch 'main'
-            }
-            steps {
-                echo 'Deploying to production environment...'
-                script {
-                    // Add approval step for production deployment
-                    timeout(time: 5, unit: 'MINUTES') {
-                        input message: 'Deploy to production?', ok: 'Deploy',
-                              submitterParameter: 'APPROVER'
-                    }
-                    
-                    sh """
-                        # Update docker-compose with new image tags
-                        sed -i 's|hospital-backend:.*|hospital-backend:${IMAGE_TAG}|g' docker-compose.prod.yml
-                        sed -i 's|hospital-frontend:.*|hospital-frontend:${IMAGE_TAG}|g' docker-compose.prod.yml
-                        
-                        # Deploy to production with blue-green deployment
-                        docker-compose -f docker-compose.prod.yml up -d --scale backend=2 --scale frontend=2
-                        
-                        # Health check before switching traffic
-                        sleep 60
-                        
-                        # Verify deployment
-                        docker-compose -f docker-compose.prod.yml ps
-                    """
-                }
-            }
-        }
     }
-    
+
     post {
-        always {
-            // Clean up Docker images to save space
-            script {
-                sh """
-                    docker image prune -f
-                    docker system prune -f --volumes
-                """
-            }
-            // Clean workspace after build
-            cleanWs()
-        }
         success {
-            echo 'Pipeline completed successfully!'
-            script {
-                // Send success notification
-                emailext (
-                    subject: "✅ Pipeline Success: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                    body: """
-                    <h2>Build Successful!</h2>
-                    <p><strong>Job:</strong> ${env.JOB_NAME}</p>
-                    <p><strong>Build Number:</strong> ${env.BUILD_NUMBER}</p>
-                    <p><strong>Git Commit:</strong> ${env.GIT_COMMIT}</p>
-                    <p><strong>Images Built:</strong></p>
-                    <ul>
-                        <li>Patient Service: ${PATIENT_SERVICE_IMAGE}</li>
-                        <li>Employee Service: ${EMPLOYEE_SERVICE_IMAGE}</li>
-                        <li>Frontend: ${FRONTEND_IMAGE}</li>
-                    </ul>
-                    <p><a href="${env.BUILD_URL}">View Build Details</a></p>
-                    """,
-                    to: "${env.CHANGE_AUTHOR_EMAIL ?: 'admin@yourcompany.com'}",
-                    mimeType: 'text/html'
-                )
-            }
+            echo '✅ Build succeeded!'
         }
         failure {
-            echo 'Pipeline failed!'
-            script {
-                // Send failure notification
-                emailext (
-                    subject: "❌ Pipeline Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                    body: """
-                    <h2>Build Failed!</h2>
-                    <p><strong>Job:</strong> ${env.JOB_NAME}</p>
-                    <p><strong>Build Number:</strong> ${env.BUILD_NUMBER}</p>
-                    <p><strong>Git Commit:</strong> ${env.GIT_COMMIT}</p>
-                    <p><strong>Stage:</strong> ${env.STAGE_NAME}</p>
-                    <p><a href="${env.BUILD_URL}">View Build Details</a></p>
-                    <p><a href="${env.BUILD_URL}/console">View Console Output</a></p>
-                    """,
-                    to: "${env.CHANGE_AUTHOR_EMAIL ?: 'admin@yourcompany.com'}",
-                    mimeType: 'text/html'
-                )
-            }
+            echo '❌ Build failed!'
         }
     }
 }
