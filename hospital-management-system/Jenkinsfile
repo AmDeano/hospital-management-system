@@ -1,16 +1,6 @@
 pipeline {
     agent any
     
-    triggers {
-        // Trigger on pushes to main and develop branches
-        githubPush()
-        // Trigger on pull requests to main and develop branches
-        githubPullRequest(
-            targetBranches: ['main', 'develop'],
-            sourceBranches: ['*']
-        )
-    }
-    
     tools {
         jdk 'JDK17' // Make sure this matches your Jenkins JDK installation name
         nodejs 'NodeJS18' // Make sure this matches your Jenkins Node.js installation name
