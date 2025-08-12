@@ -2,7 +2,7 @@
 services:
   employee-service:
     build:
-      context: ./employee-service
+      context: ./employee_service
       dockerfile: Dockerfile.employee-service
     container_name: employee-service
     ports:
@@ -14,7 +14,7 @@ services:
 
   patient-service:
     build:
-      context: ./patient-service
+      context: ./patient_service
       dockerfile: Dockerfile.patient-service
     container_name: patient-service
     ports:
