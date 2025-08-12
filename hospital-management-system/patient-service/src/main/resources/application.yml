@@ -9,14 +9,12 @@ spring:
   profiles:
     active: default
 
-  # Database Configuration (H2 for development)
   datasource:
     url: jdbc:h2:mem:patientdb
     driver-class-name: org.h2.Driver
     username: AmDee
     password: AmDee
 
-  # JPA Configuration
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
@@ -26,15 +24,13 @@ spring:
       hibernate:
         format_sql: true
 
-  # H2 Console (for development)
   h2:
     console:
       enabled: true
       path: /h2-console
       settings:
-        web-allow-others: true  # Allow access from other containers
+        web-allow-others: true
 
-# Actuator Configuration
 management:
   endpoints:
     web:
@@ -44,7 +40,6 @@ management:
     health:
       show-details: always
 
-# Eureka Configuration (for local development)
 eureka:
   client:
     service-url:
@@ -55,22 +50,22 @@ eureka:
     hostname: localhost
     prefer-ip-address: true
 
-# Logging Configuration
 logging:
   level:
     com.hospital.patient: DEBUG
     org.springframework.web: DEBUG
+    root: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 ---
-# Docker profile for containerized environment
 spring:
-  profiles: docker
+  config:
+    activate:
+      on-profile: docker
   
   datasource:
-    # Use file-based H2 for persistence in Docker
     url: jdbc:h2:file:/app/data/patientdb;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: AmDee
@@ -86,10 +81,9 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update  # Use update instead of create-drop for persistence
-    show-sql: false  # Reduce logging in Docker
+      ddl-auto: update
+    show-sql: false
 
-# Disable Eureka in Docker environment
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:false}
