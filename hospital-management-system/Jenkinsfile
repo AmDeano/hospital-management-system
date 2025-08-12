@@ -13,7 +13,7 @@ pipeline {
     
     tools {
         jdk 'JDK17' // Make sure this matches your Jenkins JDK installation name
-        nodejs 'NodeJS18' // Make sure this matches your Jenkins Node.js installation name
+        nodejs 'NodeJS' // Make sure this matches your Jenkins Node.js installation name
         maven 'Maven' // Make sure this matches your Jenkins Maven installation name
     }
     
