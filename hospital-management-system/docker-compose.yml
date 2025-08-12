@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Patient Service
+  patient-service:
+    build:
+      context: ./hospital-management-system
+      dockerfile: patient-service/Dockerfile
+    container_name: hospital-patient-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      # H2 Database is embedded, no external DB needed for patient service
+      - EMPLOYEE_SERVICE_URL=http://employee-service:8082/employee-service
+      - LOGGING_LEVEL_COM_HOSPITAL_PATIENT=DEBUG
+      # Disable Eureka in Docker environment
+      - EUREKA_CLIENT_ENABLED=false
+    volumes:
+      # Optional: Persist H2 data (if you want to keep data between container restarts)
+      - patient_h2_data:/app/data
+    networks:
+      - hospital-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/patient-service/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Employee Service
+  employee-service:
+    build:
+      context: ./hospital-management-system
+      dockerfile: employee_service/Dockerfile
+    container_name: hospital-employee-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      # H2 Database is embedded, no external DB needed for employee service
+      - PATIENT_SERVICE_URL=http://patient-service:8081
+      - LOGGING_LEVEL_COM_HOSPITAL_EMPLOYEE=DEBUG
+    volumes:
+      # Optional: Persist H2 data (if you want to keep data between container restarts)
+      - employee_h2_data:/app/data
+    networks:
+      - hospital-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/employee-service/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Angular Frontend
+  frontend:
+    build:
+      context: ./Front/front/employee-front
+      dockerfile: Dockerfile
+    container_name: hospital-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - patient-service
+      - employee-service
+    networks:
+      - hospital-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  hospital-network:
+    driver: bridge

@@ -6,14 +6,16 @@ server:
 spring:
   application:
     name: patient-service
-  
+  profiles:
+    active: default
+
   # Database Configuration (H2 for development)
   datasource:
     url: jdbc:h2:mem:patientdb
     driver-class-name: org.h2.Driver
     username: AmDee
     password: AmDee
-  
+
   # JPA Configuration
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
@@ -23,24 +25,26 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  
+
   # H2 Console (for development)
   h2:
     console:
       enabled: true
       path: /h2-console
-  
-  # Actuator Configuration
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info,metrics
-    endpoint:
-      health:
-        show-details: always
+      settings:
+        web-allow-others: true  # Allow access from other containers
 
-# Eureka Configuration
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Eureka Configuration (for local development)
 eureka:
   client:
     service-url:
@@ -59,3 +63,39 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+# Docker profile for containerized environment
+spring:
+  profiles: docker
+  
+  datasource:
+    # Use file-based H2 for persistence in Docker
+    url: jdbc:h2:file:/app/data/patientdb;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: AmDee
+    password: AmDee
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+        trace: false
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # Use update instead of create-drop for persistence
+    show-sql: false  # Reduce logging in Docker
+
+# Disable Eureka in Docker environment
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:false}
+
+logging:
+  level:
+    com.hospital.patient: ${LOGGING_LEVEL_COM_HOSPITAL_PATIENT:INFO}
+    org.springframework.web: INFO
+    root: INFO
