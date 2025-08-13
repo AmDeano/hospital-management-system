@@ -10,7 +10,8 @@ spring:
     active: default
 
   datasource:
-    url: jdbc:h2:mem:patientdb
+    # Use file-based H2 even for default profile to persist data
+    url: jdbc:h2:file:./data/patientdb;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: AmDee
     password: AmDee
@@ -18,11 +19,20 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
+      # Change to validate - let Flyway handle schema changes
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
+  # Flyway configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    locations: classpath:db/migration
+    baseline-version: 0
 
   h2:
     console:
@@ -54,6 +64,7 @@ logging:
   level:
     com.hospital.patient: DEBUG
     org.springframework.web: DEBUG
+    org.flywaydb: INFO
     root: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
@@ -64,12 +75,22 @@ spring:
   config:
     activate:
       on-profile: docker
-  
+
   datasource:
     url: jdbc:h2:file:/app/data/patientdb;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: AmDee
     password: AmDee
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Let Flyway handle migrations
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
 
   h2:
     console:
@@ -79,17 +100,13 @@ spring:
         web-allow-others: true
         trace: false
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-
   rabbitmq:
     host: localhost
     port: 5672
     username: admin
     password: admin123
     virtual-host: /
+
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:false}
@@ -98,4 +115,5 @@ logging:
   level:
     com.hospital.patient: ${LOGGING_LEVEL_COM_HOSPITAL_PATIENT:INFO}
     org.springframework.web: INFO
+    org.flywaydb: INFO
     root: INFO

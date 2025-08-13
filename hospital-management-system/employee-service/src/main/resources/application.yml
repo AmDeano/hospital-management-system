@@ -74,13 +74,12 @@ spring:
       ddl-auto: update
     show-sql: false
 
-	rabbitmq:
-		host: localhost
-		port: 5672
-		username: admin
-		password: admin123
-		virtual-host: /	
-	
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+    virtual-host: /	
 logging:
   level:
     com.hospital.employee: ${LOGGING_LEVEL_COM_HOSPITAL_EMPLOYEE:INFO}
