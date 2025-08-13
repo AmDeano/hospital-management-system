@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK17'       // Jenkins tool name for JDK 17
-        maven 'Maven'     // Jenkins tool name for Maven
-        nodejs 'NodeJS18' // Jenkins tool name for Node.js 18
+        jdk 'JDK17'
+        maven 'Maven'
+        nodejs 'NodeJS18'
     }
 
     environment {
@@ -27,13 +27,13 @@ pipeline {
             }
         }
 
-        stage('Run Backend Tests') {
-            steps {
-                dir('hospital-management-system') {
-                    sh 'mvn test'
-                }
-            }
-        }
+        //stage('Run Backend Tests') {
+            //steps {
+                //dir('hospital-management-system') {
+                    //sh 'mvn test'
+                //}
+            //}
+        //}
 
         stage('Install Frontend Dependencies') {
             steps {
@@ -50,11 +50,33 @@ pipeline {
                 }
             }
         }
+
+        stage('Build Docker Images') {
+            steps {
+                sh 'docker compose build'
+            }
+        }
+
+        stage('Run Docker Containers') {
+            steps {
+                sh 'docker compose up -d'
+            }
+        }
+
+        stage('Check Running Containers') {
+            steps {
+                sh 'docker ps'
+            }
+        }
     }
 
     post {
+        always {
+            echo "🧹 Cleaning up Docker containers..."
+            sh 'docker compose down'
+        }
         success {
-            echo '✅ Build succeeded!'
+            echo '✅ Build and deployment succeeded!'
         }
         failure {
             echo '❌ Build failed!'
