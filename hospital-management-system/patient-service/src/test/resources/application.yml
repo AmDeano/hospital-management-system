@@ -31,13 +31,6 @@ spring:
       settings:
         web-allow-others: true
 
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: admin
-    password: admin123
-    virtual-host: /
-
 management:
   endpoints:
     web:

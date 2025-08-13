@@ -1,25 +1,25 @@
 server:
-  port: 8081
+  port: 8082
   servlet:
-    context-path: /patient-service
+    context-path: /employee-service
 
 spring:
   application:
-    name: patient-service
+    name: employee-service
   profiles:
     active: default
-
+  
   datasource:
-    url: jdbc:h2:mem:patientdb
+    url: jdbc:h2:mem:employeedb
     driver-class-name: org.h2.Driver
-    username: AmDee
+    username: Amdee
     password: AmDee
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update # use 'create-drop' for fresh db on each run
     show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
     properties:
       hibernate:
         format_sql: true
@@ -29,14 +29,7 @@ spring:
       enabled: true
       path: /h2-console
       settings:
-        web-allow-others: true
-
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: admin
-    password: admin123
-    virtual-host: /
+        web-allow-others: true  # Allow access from other containers
 
 management:
   endpoints:
@@ -47,24 +40,13 @@ management:
     health:
       show-details: always
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    hostname: localhost
-    prefer-ip-address: true
-
 logging:
   level:
-    com.hospital.patient: DEBUG
+    com.hospital.employee: DEBUG
     org.springframework.web: DEBUG
     root: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 ---
 spring:
@@ -73,9 +55,10 @@ spring:
       on-profile: docker
   
   datasource:
-    url: jdbc:h2:file:/app/data/patientdb;AUTO_SERVER=TRUE
+    # Use file-based H2 for persistence in Docker
+    url: jdbc:h2:file:/app/data/employeedb;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
-    username: AmDee
+    username: Amdee
     password: AmDee
 
   h2:
@@ -91,12 +74,8 @@ spring:
       ddl-auto: update
     show-sql: false
 
-eureka:
-  client:
-    enabled: ${EUREKA_CLIENT_ENABLED:false}
-
 logging:
   level:
-    com.hospital.patient: ${LOGGING_LEVEL_COM_HOSPITAL_PATIENT:INFO}
+    com.hospital.employee: ${LOGGING_LEVEL_COM_HOSPITAL_EMPLOYEE:INFO}
     org.springframework.web: INFO
     root: INFO
