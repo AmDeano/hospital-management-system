@@ -64,10 +64,38 @@
         	<artifactId>patient-service</artifactId>
         	<version>1.0.0</version>
         </dependency>-->
-       <dependency>
-       	<groupId>com.hospital</groupId>
-       	<artifactId>patient-service</artifactId>
-       	<version>1.0.0</version>
-       </dependency>
+       <!-- RabbitMQ -->
+	    <dependency>
+	        <groupId>org.springframework.boot</groupId>
+	        <artifactId>spring-boot-starter-amqp</artifactId>
+	    </dependency>
+	    
+	    <!-- JSON Processing -->
+	    <dependency>
+	        <groupId>com.fasterxml.jackson.core</groupId>
+	        <artifactId>jackson-databind</artifactId>
+	    </dependency>
+    	
+    	<dependency>
+    		<groupId>com.hospital</groupId>
+    		<artifactId>common</artifactId>
+    		<version>1.0.0</version>
+		</dependency>
     </dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 </project>

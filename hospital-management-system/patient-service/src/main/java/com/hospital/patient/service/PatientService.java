@@ -9,6 +9,8 @@ import com.hospital.patient.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -19,11 +21,18 @@ import java.util.stream.Collectors;
 @Transactional
 public class PatientService {
     
+    private static final Logger logger = LoggerFactory.getLogger(PatientService.class);
+    
     @Autowired
     private PatientRepository patientRepository;
     
+    @Autowired
+    private PatientEventPublisher eventPublisher;
+    
     // Create a new patient
     public PatientDto createPatient(PatientDto patientDto) {
+        logger.info("Creating new patient: {}", patientDto.getNom());
+        
         // Validate patient data
         validatePatientData(patientDto);
         
@@ -44,12 +53,31 @@ public class PatientService {
         generatePatientId(patient);
         
         Patient savedPatient = patientRepository.save(patient);
-        return convertToDto(savedPatient);
+        PatientDto result = convertToDto(savedPatient);
+        
+        // Publish patient created event
+        try {
+            eventPublisher.publishPatientCreated(
+                savedPatient.getId(),
+                savedPatient.getNom(),
+                savedPatient.getEmail(),
+                savedPatient.getCin(),
+                savedPatient.getIsMinor(),
+                savedPatient.getParentCin()
+            );
+            logger.info("Patient created event published for ID: {}", savedPatient.getId());
+        } catch (Exception e) {
+            logger.error("Failed to publish patient created event for ID: {}", savedPatient.getId(), e);
+            // Don't fail the operation if event publishing fails
+        }
+        
+        return result;
     }
     
     // Get all patients
     @Transactional(readOnly = true)
     public List<PatientDto> getAllPatients() {
+        logger.debug("Retrieving all patients");
         return patientRepository.findAll()
                 .stream()
                 .map(this::convertToDto)
@@ -59,6 +87,7 @@ public class PatientService {
     // Get patient by ID
     @Transactional(readOnly = true)
     public PatientDto getPatientById(String id) {
+        logger.debug("Retrieving patient by ID: {}", id);
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new PatientNotFoundException("Patient not found with id: " + id));
         return convertToDto(patient);
@@ -67,6 +96,7 @@ public class PatientService {
     // Get patient by CIN
     @Transactional(readOnly = true)
     public PatientDto getPatientByCin(String cin) {
+        logger.debug("Retrieving patient by CIN: {}", cin);
         Patient patient = patientRepository.findByCin(cin)
                 .orElseThrow(() -> new PatientNotFoundException("Patient not found with CIN: " + cin));
         return convertToDto(patient);
@@ -75,6 +105,7 @@ public class PatientService {
     // Get patient by email
     @Transactional(readOnly = true)
     public PatientDto getPatientByEmail(String email) {
+        logger.debug("Retrieving patient by email: {}", email);
         Patient patient = patientRepository.findByEmail(email)
                 .orElseThrow(() -> new PatientNotFoundException("Patient not found with email: " + email));
         return convertToDto(patient);
@@ -83,6 +114,7 @@ public class PatientService {
     // Get minors by parent CIN
     @Transactional(readOnly = true)
     public List<PatientDto> getMinorsByParentCin(String parentCin) {
+        logger.debug("Retrieving minors for parent CIN: {}", parentCin);
         return patientRepository.findByParentCin(parentCin)
                 .stream()
                 .map(this::convertToDto)
@@ -92,6 +124,7 @@ public class PatientService {
     // Get all minors
     @Transactional(readOnly = true)
     public List<PatientDto> getAllMinors() {
+        logger.debug("Retrieving all minors");
         return patientRepository.findByIsMinorTrue()
                 .stream()
                 .map(this::convertToDto)
@@ -100,8 +133,16 @@ public class PatientService {
     
     // Update patient
     public PatientDto updatePatient(String id, PatientDto patientDto) {
+        logger.info("Updating patient with ID: {}", id);
+        
         Patient existingPatient = patientRepository.findById(id)
                 .orElseThrow(() -> new PatientNotFoundException("Patient not found with id: " + id));
+        
+        // Store original values for event publishing
+        String originalEmail = existingPatient.getEmail();
+        String originalNom = existingPatient.getNom();
+        String originalCin = existingPatient.getCin();
+        Boolean originalIsMinor = existingPatient.getIsMinor();
         
         // Validate updated data
         validatePatientData(patientDto);
@@ -124,6 +165,7 @@ public class PatientService {
         existingPatient.setParentCin(patientDto.getParentCin());
         
         // Check if age status changed (minor to adult or vice versa)
+        boolean ageStatusChanged = false;
         if (patientDto.getDateNaissance() != null) {
             int age = Period.between(patientDto.getDateNaissance(), LocalDate.now()).getYears();
             boolean isMinor = age < 18;
@@ -135,26 +177,70 @@ public class PatientService {
                     throw new InvalidPatientDataException("CIN is required for adult patients");
                 }
                 existingPatient.setId(patientDto.getCin());
+                ageStatusChanged = true;
+            }
+            
+            if (existingPatient.getIsMinor() != isMinor) {
+                ageStatusChanged = true;
             }
             
             existingPatient.setIsMinor(isMinor);
         }
         
         Patient updatedPatient = patientRepository.save(existingPatient);
-        return convertToDto(updatedPatient);
+        PatientDto result = convertToDto(updatedPatient);
+        
+        // Publish patient updated event
+        try {
+            eventPublisher.publishPatientUpdated(
+                updatedPatient.getId(),
+                updatedPatient.getNom(),
+                updatedPatient.getEmail(),
+                updatedPatient.getCin(),
+                updatedPatient.getIsMinor(),
+                updatedPatient.getParentCin(),
+                buildUpdateDetails(originalNom, originalEmail, originalCin, originalIsMinor, 
+                                 updatedPatient, ageStatusChanged)
+            );
+            logger.info("Patient updated event published for ID: {}", updatedPatient.getId());
+        } catch (Exception e) {
+            logger.error("Failed to publish patient updated event for ID: {}", updatedPatient.getId(), e);
+            // Don't fail the operation if event publishing fails
+        }
+        
+        return result;
     }
     
     // Delete patient
     public void deletePatient(String id) {
-        if (!patientRepository.existsById(id)) {
-            throw new PatientNotFoundException("Patient not found with id: " + id);
-        }
+        logger.info("Deleting patient with ID: {}", id);
+        
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new PatientNotFoundException("Patient not found with id: " + id));
+        
+        // Store patient details for event before deletion
+        String patientName = patient.getNom();
+        String patientEmail = patient.getEmail();
+        String patientCin = patient.getCin();
+        Boolean isMinor = patient.getIsMinor();
+        String parentCin = patient.getParentCin();
+        
         patientRepository.deleteById(id);
+        
+        // Publish patient deleted event
+        try {
+            eventPublisher.publishPatientDeleted(id, patientName, patientEmail, patientCin, isMinor, parentCin);
+            logger.info("Patient deleted event published for ID: {}", id);
+        } catch (Exception e) {
+            logger.error("Failed to publish patient deleted event for ID: {}", id, e);
+            // Event publishing failure doesn't affect deletion
+        }
     }
     
     // Search patients by name
     @Transactional(readOnly = true)
     public List<PatientDto> searchPatientsByName(String nom) {
+        logger.debug("Searching patients by name: {}", nom);
         return patientRepository.findByNomContainingIgnoreCase(nom)
                 .stream()
                 .map(this::convertToDto)
@@ -203,6 +289,31 @@ public class PatientService {
             // Use CIN as ID for adults
             patient.setId(patient.getCin());
         }
+    }
+    
+    // Build update details for event
+    private String buildUpdateDetails(String originalNom, String originalEmail, String originalCin, 
+                                    Boolean originalIsMinor, Patient updatedPatient, boolean ageStatusChanged) {
+        StringBuilder details = new StringBuilder();
+        
+        if (!originalNom.equals(updatedPatient.getNom())) {
+            details.append("Name changed from '").append(originalNom).append("' to '").append(updatedPatient.getNom()).append("'; ");
+        }
+        
+        if (!originalEmail.equals(updatedPatient.getEmail())) {
+            details.append("Email changed from '").append(originalEmail).append("' to '").append(updatedPatient.getEmail()).append("'; ");
+        }
+        
+        if (originalCin != null && !originalCin.equals(updatedPatient.getCin())) {
+            details.append("CIN changed from '").append(originalCin).append("' to '").append(updatedPatient.getCin()).append("'; ");
+        }
+        
+        if (ageStatusChanged) {
+            details.append("Age status changed from ").append(originalIsMinor ? "minor" : "adult")
+                   .append(" to ").append(updatedPatient.getIsMinor() ? "minor" : "adult").append("; ");
+        }
+        
+        return details.length() > 0 ? details.toString() : "General update";
     }
     
     // Convert Entity to DTO

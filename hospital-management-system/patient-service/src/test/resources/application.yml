@@ -84,6 +84,12 @@ spring:
       ddl-auto: update
     show-sql: false
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+    virtual-host: /
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:false}
