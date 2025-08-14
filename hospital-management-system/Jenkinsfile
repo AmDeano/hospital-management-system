@@ -37,7 +37,7 @@ pipeline {
 
         stage('Install Frontend Dependencies') {
             steps {
-                dir('Front/front/employee-front') {
+                dir('hospital-management-system/Front/front/employee-front') {
                     sh 'npm install'
                 }
             }
@@ -45,7 +45,7 @@ pipeline {
 
         stage('Build Frontend') {
             steps {
-                dir('Front/front/employee-front') {
+                dir('hospital-management-system/Front/front/employee-front') {
                     sh 'npm run build'
                 }
             }
@@ -53,7 +53,7 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                sh 'docker compose build'
+                sh 'docker compose -f hospital-management-system/docker-compose.yml build'
             }
         }
 
