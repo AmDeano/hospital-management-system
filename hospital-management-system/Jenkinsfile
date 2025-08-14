@@ -66,7 +66,7 @@ pipeline {
 
         stage('Run Docker Containers') {
             steps {
-                sh 'docker compose -f hospital-management-system/docker-compose.yml up -d'
+                sh 'docker compose -f docker-compose.yml up -d'
             }
         }
 
@@ -80,7 +80,7 @@ pipeline {
     post {
         always {
             echo "🧹 Cleaning up Docker containers..."
-            sh 'docker compose -f hospital-management-system/docker-compose.yml down'
+            sh 'docker compose -f docker-compose.yml down'
         }
         success {
             echo '✅ Build and deployment succeeded!'
