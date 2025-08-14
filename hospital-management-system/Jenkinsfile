@@ -83,7 +83,9 @@ pipeline {
     post {
         always {
             echo "🧹 Cleaning up Docker containers..."
+            dir('hospital-management-system'){
             sh 'docker compose -f docker-compose.yml down'
+        }
         }
         success {
             echo '✅ Build and deployment succeeded!'
