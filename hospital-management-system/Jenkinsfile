@@ -60,27 +60,30 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
+				dir('hospital-management-system'){
                 sh 'docker compose -f docker-compose.yml build'
             }
         }
-
+	}
         stage('Run Docker Containers') {
             steps {
+				dir('hospital-management-system'){
                 sh 'docker compose -f docker-compose.yml up -d'
             }
         }
-
+	}
         stage('Check Running Containers') {
             steps {
+				dir('hospital-management-system'){
                 sh 'docker ps'
             }
         }
     }
-
+    
     post {
         always {
             echo "🧹 Cleaning up Docker containers..."
-            sh 'docker compose -f docker-compose.yml down'
+            sh 'docker compose -f hospital-management-system/docker-compose.yml down'
         }
         success {
             echo '✅ Build and deployment succeeded!'
