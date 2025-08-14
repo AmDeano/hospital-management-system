@@ -60,7 +60,7 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                sh 'docker compose -f hospital-management-system/docker-compose.yml build'
+                sh 'docker compose -f docker-compose.yml build'
             }
         }
 
