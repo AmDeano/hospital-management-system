@@ -79,7 +79,7 @@ pipeline {
             }
         }
     }
-    
+ }   
     post {
         always {
             echo "🧹 Cleaning up Docker containers..."
@@ -92,5 +92,5 @@ pipeline {
             echo '❌ Build failed!'
         }
     }
-}
+
 }
