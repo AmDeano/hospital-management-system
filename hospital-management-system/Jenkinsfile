@@ -34,6 +34,13 @@ pipeline {
                 //}
             //}
         //}
+        stage('Check Frontend Files') {
+		    steps {
+		        sh 'ls -l hospital-management-system/Front/front/employee-front'
+		        sh 'test -f hospital-management-system/Front/front/employee-front/package.json'
+		    }
+		}
+
 
         stage('Install Frontend Dependencies') {
             steps {
