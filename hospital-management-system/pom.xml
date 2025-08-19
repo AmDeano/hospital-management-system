@@ -24,6 +24,7 @@
     <module>employee-service</module>
     <!-- <module>front</module> -->
     <module>common</module>
+    <module>auth-service</module>
   </modules>
   <dependencyManagement>
     <dependencies>

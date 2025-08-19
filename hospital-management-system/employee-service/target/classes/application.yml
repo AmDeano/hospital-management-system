@@ -8,7 +8,13 @@ spring:
     name: employee-service
   profiles:
     active: default
-  
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/.well-known/jwks.json 
+
   datasource:
     url: jdbc:h2:mem:employeedb
     driver-class-name: org.h2.Driver
@@ -53,6 +59,12 @@ spring:
   config:
     activate:
       on-profile: docker
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://auth-service:9000/.well-known/jwks.json
   
   datasource:
     # Use file-based H2 for persistence in Docker

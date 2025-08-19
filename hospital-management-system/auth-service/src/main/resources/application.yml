@@ -1,0 +1,23 @@
+# auth-service/src/main/resources/application.yml
+server:
+  port: 9000
+  servlet:
+    context-path: /auth-service
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:mysql://mysql-auth:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: authuser
+    password: authpass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
