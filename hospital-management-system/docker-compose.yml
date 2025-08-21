@@ -35,17 +35,29 @@ services:
       - hospital-network
 
   employee-frontend:
-    build:
-      context: ./Front/front/employee-front
-      dockerfile: Dockerfile.employee-front
-    container_name: employee-frontend
-    ports:
-      - "4200:80"
-    depends_on:
-      - employee-service
-      - patient-service
-    networks:
-      - hospital-network
+     build:
+       context: ./Front/employee-front
+       dockerfile: Dockerfile.employee-front
+     container_name: employee-frontend-dev
+     ports:
+       - "4200:4200"
+       - "49153:49153"  # For live reload
+     volumes:
+# Mount source code for hot reload (excluding node_modules)
+       - ./Front/employee-front:/app
+       - /app/node_modules
+       - /app/dist
+     environment:
+       - NODE_ENV=development
+       - NG_CLI_ANALYTICS=false
+     networks:
+       - hospital-network
+     restart: unless-stopped
+     stdin_open: true
+     tty: true
+    # Optional: depends on backend services
+    # depends_on:
+         #   - employee-backend
 
 networks:
   hospital-network:
