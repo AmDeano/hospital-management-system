@@ -146,6 +146,14 @@
   			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.hospital</groupId>
+			<artifactId>auth-service</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
+
+
     </dependencies>
 
     <build>

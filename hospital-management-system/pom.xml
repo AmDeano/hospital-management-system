@@ -17,10 +17,6 @@
   <modules>
     <!-- Microservices will be added here -->
     <module>patient-service</module>
-    <!-- <module>consultation-service</module> -->
-    <!-- <module>config-server</module> -->
-    <!-- <module>eureka-server</module> -->
-    <!-- <module>api-gateway</module> -->
     <module>employee-service</module>
     <!-- <module>front</module> -->
     <module>common</module>

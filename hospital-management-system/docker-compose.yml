@@ -1,67 +1,180 @@
+version: '3.9'
 
 services:
-  rabbitmq:
-   image: rabbitmq:3-management
-   container_name: hospital-rabbitmq
-   ports:
-     - "5672:5672"    # AMQP port
-     - "15672:15672"  # Management UI port
-   environment:
-     RABBITMQ_DEFAULT_USER: admin
-     RABBITMQ_DEFAULT_PASS: admin123
-
-  employee-service:
-    build:
-      context: .
-      dockerfile: employee-service/Dockerfile.employee-service
-    container_name: employee-service
-    ports:
-      - "8082:8082"
+  mysql-auth:
+    image: mysql:8.0
+    container_name: mysql-auth
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: authdb
+      MYSQL_USER: AmDee
+      MYSQL_PASSWORD: AmDee
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
     networks:
       - hospital-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql-auth
+      PMA_USER: root
+      PMA_PASSWORD: rootpass
+    ports:
+      - "8085:80"
+    depends_on:
+      - mysql-auth
+    networks:
+      - hospital-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: hospital-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - hospital-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile.auth-service
+    container_name: auth-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-auth:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: AmDee
+      SPRING_DATASOURCE_PASSWORD: AmDee
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql-auth:
+        condition: service_healthy
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/auth-service/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
   patient-service:
     build:
       context: .
       dockerfile: patient-service/Dockerfile.patient-service
     container_name: patient-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: admin
+      SPRING_RABBITMQ_PASSWORD: admin123
     ports:
       - "8081:8081"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - hospital-network
+    volumes:
+      - patient_data:/app/data
+
+  employee-service:
+    build:
+      context: .
+      dockerfile: employee-service/Dockerfile.employee-service
+    container_name: employee-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-auth:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: AmDee
+      SPRING_DATASOURCE_PASSWORD: AmDee
+    ports:
+      - "8082:8082"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/employee-service/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: ./
+      dockerfile: Dockerfile.Nginx
+    container_name: api-gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - patient-service
+      - employee-service
+    networks:
+      - hospital-network
+    volumes:
+      - ./api-gateway/nginx-api-gateway.conf:/etc/nginx/nginx-api-gateway.conf:ro
 
   employee-frontend:
-     build:
-       context: ./Front/employee-front
-       dockerfile: Dockerfile.employee-front
-     container_name: employee-frontend-dev
-     ports:
-       - "4200:4200"
-       - "49153:49153"  # For live reload
-     volumes:
-# Mount source code for hot reload (excluding node_modules)
-       - ./Front/employee-front:/app
-       - /app/node_modules
-       - /app/dist
-     environment:
-       - NODE_ENV=development
-       - NG_CLI_ANALYTICS=false
-     networks:
-       - hospital-network
-     restart: unless-stopped
-     stdin_open: true
-     tty: true
-    # Optional: depends on backend services
-    # depends_on:
-         #   - employee-backend
+    build:
+      context: ./Front/employee-front
+      dockerfile: Dockerfile.employee-front
+    container_name: employee-frontend-dev
+    ports:
+      - "4200:4200"
+      - "49153:49153"  # For live reload
+    volumes:
+      - ./Front/employee-front:/app
+      - /app/node_modules
+      - /app/dist
+    environment:
+      NODE_ENV: development
+      NG_CLI_ANALYTICS: false
+      API_BASE_URL: http://localhost/api
+      AUTH_SERVICE_URL: http://localhost/api/auth
+    networks:
+      - hospital-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
 
 networks:
   hospital-network:
-    driver: bridge	
+    driver: bridge
 
 volumes:
+  mysql_data:
+    driver: local
   rabbitmq_data:
+    driver: local
+  patient_data:
+    driver: local
+  employee_data:
+    driver: local

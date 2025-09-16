@@ -1,0 +1,53 @@
+package com.hospital.employee.controller;
+
+import com.hospital.employee.entity.AdministrativeStaff;
+import com.hospital.employee.usecase.AdministrativeStaffUseCaseImpl;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/employee-service/api/adminstaff")
+@PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('SUPERVISOR')")
+public class AdministrativeStaffController {
+
+    private final AdministrativeStaffUseCaseImpl staffUseCase;
+
+    public AdministrativeStaffController(AdministrativeStaffUseCaseImpl staffUseCase) {
+        this.staffUseCase = staffUseCase;
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdministrativeStaff> create(@Valid @RequestBody AdministrativeStaff staff) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(staffUseCase.create(staff));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<AdministrativeStaff>> all() {
+        return ResponseEntity.ok(staffUseCase.findAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AdministrativeStaff> get(@PathVariable Long id) {
+        return ResponseEntity.ok(staffUseCase.findById(id));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdministrativeStaff> update(@PathVariable Long id, @Valid @RequestBody AdministrativeStaff staff) {
+        return ResponseEntity.ok(staffUseCase.update(id, staff));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        staffUseCase.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}

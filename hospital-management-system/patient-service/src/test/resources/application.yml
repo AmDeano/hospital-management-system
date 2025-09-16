@@ -7,16 +7,16 @@ spring:
   application:
     name: patient-service
   profiles:
-    active: default
+    active: dev  # Change to 'default' for production
 
-security:
-  oauth2:
-    resourceserver:
-      jwt:
-        jwk-set-uri: http://localhost:9000/.well-known/jwks.json
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/.well-known/jwks.json
+
   datasource:
-    # Use file-based H2 even for default profile to persist data
-    url: jdbc:h2:file:./data/patientdb;AUTO_SERVER=TRUE
+    url: jdbc:h2:mem:patientdb
     driver-class-name: org.h2.Driver
     username: AmDee
     password: AmDee
@@ -24,20 +24,11 @@ security:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      # Change to validate - let Flyway handle schema changes
-      ddl-auto: validate
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-
-  # Flyway configuration
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-    validate-on-migrate: true
-    locations: classpath:db/migration
-    baseline-version: 0
 
   h2:
     console:
@@ -45,6 +36,10 @@ security:
       path: /h2-console
       settings:
         web-allow-others: true
+
+jwt:
+  secret: ${JWT_SECRET:hospital-management-system-super-secret-key-for-development-environment-only-256-bits}
+  expiration: ${JWT_EXPIRATION:86400}
 
 management:
   endpoints:
@@ -69,13 +64,13 @@ logging:
   level:
     com.hospital.patient: DEBUG
     org.springframework.web: DEBUG
-    org.flywaydb: INFO
+    org.springframework.security: INFO
     root: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 ---
+# Docker profile
 spring:
   config:
     activate:
@@ -85,46 +80,17 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://auth-service:9000/.well-known/jwks.json
+          jwk-set-uri: http://auth-server:9000/.well-known/jwks.json
 
   datasource:
     url: jdbc:h2:file:/app/data/patientdb;AUTO_SERVER=TRUE
-    driver-class-name: org.h2.Driver
-    username: AmDee
-    password: AmDee
-
-  jpa:
-    hibernate:
-      ddl-auto: validate  # Let Flyway handle migrations
-    show-sql: false
-
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
-        trace: false
-
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: admin
-    password: admin123
-    virtual-host: /
 
 eureka:
   client:
-    enabled: ${EUREKA_CLIENT_ENABLED:false}
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
 
 logging:
   level:
-    com.hospital.patient: ${LOGGING_LEVEL_COM_HOSPITAL_PATIENT:INFO}
-    org.springframework.web: INFO
-    org.flywaydb: INFO
-    root: INFO
+    com.hospital.patient: INFO
+    org.springframework.security: INFO
