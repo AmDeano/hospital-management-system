@@ -5,14 +5,14 @@ import com.hospital.employee.usecase.DoctorUseCaseImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/employee-service/api/doctors")
-//@PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or hasRole('SUPERVISOR')")
+@PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or hasRole('SUPERVISOR')")
 public class DoctorController {
 
     private final DoctorUseCaseImpl doctorUseCase;
@@ -22,7 +22,7 @@ public class DoctorController {
     }
 
     @PostMapping
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('HR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('HR')")
     public ResponseEntity<Doctor> createDoctor(@Valid @RequestBody Doctor doctor) {
         Doctor created = doctorUseCase.create(doctor);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -48,14 +48,25 @@ public class DoctorController {
         return ResponseEntity.ok(doctorUseCase.findAvailableDoctors());
     }
 
+    @PostMapping("/{id}/patients/{patientId}/discharge")
+    public ResponseEntity<String> authorizeDischarge(@PathVariable Long id, @PathVariable Long patientId) {
+        return ResponseEntity.ok(doctorUseCase.authorizePatientDischarge(id, patientId));
+    }
+
+    @PostMapping("/{id}/patients/{patientId}/certificate")
+    public ResponseEntity<String> writeCertificate(@PathVariable Long id, @PathVariable Long patientId,
+                                                   @RequestBody String details) {
+        return ResponseEntity.ok(doctorUseCase.writeMedicalCertificate(id, patientId, details));
+    }
+
     @PutMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('HR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('HR')")
     public ResponseEntity<Doctor> updateDoctor(@PathVariable Long id, @Valid @RequestBody Doctor doctor) {
         return ResponseEntity.ok(doctorUseCase.update(id, doctor));
     }
 
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDoctor(@PathVariable Long id) {
         doctorUseCase.delete(id);
         return ResponseEntity.noContent().build();

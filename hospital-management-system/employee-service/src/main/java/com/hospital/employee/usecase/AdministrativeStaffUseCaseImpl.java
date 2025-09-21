@@ -1,56 +1,29 @@
 package com.hospital.employee.usecase;
 
 import com.hospital.employee.entity.AdministrativeStaff;
-import com.hospital.employee.exception.EmployeeNotFoundException;
 import com.hospital.employee.repository.AdministrativeStaffRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @Transactional
-public class AdministrativeStaffUseCaseImpl implements EmployeeUseCase<AdministrativeStaff> {
+public class AdministrativeStaffUseCaseImpl extends AbstractEmployeeUseCase<AdministrativeStaff> {
 
-    private final AdministrativeStaffRepository staffRepository;
+    private final AdministrativeStaffRepository repository;
 
-    public AdministrativeStaffUseCaseImpl(AdministrativeStaffRepository staffRepository) {
-        this.staffRepository = staffRepository;
+    public AdministrativeStaffUseCaseImpl(AdministrativeStaffRepository repository) {
+        super(repository);
+        this.repository = repository;
     }
 
     @Override
-    public AdministrativeStaff create(AdministrativeStaff staff) {
-        return staffRepository.save(staff);
+    protected void updateSpecificFields(AdministrativeStaff existing, AdministrativeStaff update) {
+        if (update.getDepartment() != null) existing.setDepartment(update.getDepartment());
     }
 
-    @Override
-    public AdministrativeStaff update(Long id, AdministrativeStaff staff) {
-        AdministrativeStaff existing = findById(id);
-        existing.setFirstName(staff.getFirstName());
-        existing.setLastName(staff.getLastName());
-        existing.setEmail(staff.getEmail());
-        existing.setPhone(staff.getPhone());
-        existing.setDepartment(staff.getDepartment());
-        existing.setDepartment(staff.getDepartment());
-        existing.setAddress(staff.getAddress());
-        existing.setHireDate(staff.getHireDate());
-        existing.setIsActive(staff.getIsActive());
-        return staffRepository.save(existing);
-    }
-
-    @Override
-    public void delete(Long id) {
-        staffRepository.deleteById(id);
-    }
-
-    @Override
-    public AdministrativeStaff findById(Long id) {
-        return staffRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Administrative Staff not found with id: " + id));
-    }
-
-    @Override
-    public List<AdministrativeStaff> findAll() {
-        return staffRepository.findAll();
+    public List<AdministrativeStaff> findByDepartmentArea(String area) {
+        return repository.findByDepartmentArea(area);
     }
 }

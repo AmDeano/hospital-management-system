@@ -1,3 +1,12 @@
+-- ============================================================
+-- Schema for employee-service
+-- ============================================================
+CREATE DATABASE IF NOT EXISTS employeedb
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE employeedb;
+
 -- Create departments table
 CREATE TABLE IF NOT EXISTS departments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

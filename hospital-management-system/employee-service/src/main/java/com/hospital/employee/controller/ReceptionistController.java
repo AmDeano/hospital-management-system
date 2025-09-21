@@ -5,14 +5,15 @@ import com.hospital.employee.usecase.ReceptionistUseCaseImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/employee-service/api/receptionists")
-//@PreAuthorize("hasRole('ADMIN') or hasRole('RECEPTION') or hasRole('SUPERVISOR')")
+@PreAuthorize("hasRole('ADMIN') or hasRole('RECEPTIONIST') or hasRole('SUPERVISOR')")
 public class ReceptionistController {
 
     private final ReceptionistUseCaseImpl receptionistUseCase;
@@ -22,7 +23,7 @@ public class ReceptionistController {
     }
 
     @PostMapping
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Receptionist> create(@Valid @RequestBody Receptionist receptionist) {
         return ResponseEntity.status(HttpStatus.CREATED).body(receptionistUseCase.create(receptionist));
     }
@@ -37,14 +38,19 @@ public class ReceptionistController {
         return ResponseEntity.ok(receptionistUseCase.findById(id));
     }
 
+    @GetMapping("/desk/{deskNumber}")
+    public ResponseEntity<Optional<Receptionist>> getByDeskNumber(@PathVariable String deskNumber) {
+        return ResponseEntity.ok(receptionistUseCase.findByDeskNumber(deskNumber));
+    }
+
     @PutMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Receptionist> update(@PathVariable Long id, @Valid @RequestBody Receptionist receptionist) {
         return ResponseEntity.ok(receptionistUseCase.update(id, receptionist));
     }
 
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         receptionistUseCase.delete(id);
         return ResponseEntity.noContent().build();

@@ -13,7 +13,28 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_auth_data:/var/lib/mysql
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  mysql-employee:
+    image: mysql:8.0
+    container_name: mysql-employee
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: employeedb
+      MYSQL_USER: AmDee
+      MYSQL_PASSWORD: AmDee
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_employee_data:/var/lib/mysql
     networks:
       - hospital-network
     healthcheck:
@@ -26,13 +47,15 @@ services:
     image: phpmyadmin/phpmyadmin:latest
     container_name: phpmyadmin
     environment:
-      PMA_HOST: mysql-auth
+      PMA_ARBITRARY: 1          # ✅ permet connexion à plusieurs serveurs
+      PMA_HOSTS: mysql-auth,mysql-employee
       PMA_USER: root
       PMA_PASSWORD: rootpass
     ports:
       - "8085:80"
     depends_on:
       - mysql-auth
+      - mysql-employee
     networks:
       - hospital-network
 
@@ -40,8 +63,8 @@ services:
     image: rabbitmq:3-management
     container_name: hospital-rabbitmq
     ports:
-      - "5672:5672"    # AMQP port
-      - "15672:15672"  # Management UI port
+      - "5672:5672"    
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin123
@@ -110,12 +133,14 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-auth:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-employee:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: AmDee
       SPRING_DATASOURCE_PASSWORD: AmDee
     ports:
       - "8082:8082"
     depends_on:
+      mysql-employee:
+        condition: service_healthy
       auth-service:
         condition: service_healthy
     networks:
@@ -149,7 +174,7 @@ services:
     container_name: employee-frontend-dev
     ports:
       - "4200:4200"
-      - "49153:49153"  # For live reload
+      - "49153:49153"
     volumes:
       - ./Front/employee-front:/app
       - /app/node_modules
@@ -170,7 +195,9 @@ networks:
     driver: bridge
 
 volumes:
-  mysql_data:
+  mysql_auth_data:
+    driver: local
+  mysql_employee_data:
     driver: local
   rabbitmq_data:
     driver: local

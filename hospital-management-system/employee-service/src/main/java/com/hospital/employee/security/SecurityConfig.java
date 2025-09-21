@@ -4,52 +4,67 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable());
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // Public endpoints (actuator, h2-console if needed)
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
 
-        http.headers(headers -> headers
-            .frameOptions(frame -> frame.disable()) // if needed for H2 console
-        );
+                // Protected endpoints
+                .requestMatchers("/api/**").authenticated()
 
-        http.authorizeHttpRequests(auth -> auth
-            .requestMatchers("/actuator/**", "/h2-console/**").permitAll()
-            // allow the dashboard route endpoint for authenticated users
-            .requestMatchers("/employee/dashboard-route").authenticated()
-            // other endpoints: you might put more specific rules
-            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers("/api/hr/**").hasAnyRole("ADMIN", "HR", "SUPERVISOR")
-            .requestMatchers("/api/doctor/**").hasAnyRole("ADMIN", "DOCTOR", "SUPERVISOR")
-            .requestMatchers("/api/nurse/**").hasAnyRole("ADMIN", "NURSE","DOCTOR", "SUPERVISOR")
-            .requestMatchers("/api/receptionist/**").hasAnyRole("ADMIN", "RECEPTIONIST", "SUPERVISOR")
-            .requestMatchers("/api/observator/**").hasAnyRole("ADMIN", "OBSERVATOR", "SUPERVISOR")
-            .requestMatchers("/api/supervisor/**").hasAnyRole("ADMIN", "SUPERVISOR")
-            
-            .anyRequest().authenticated()
-        );
-
-        http.oauth2ResourceServer(oauth -> oauth
-            .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-        );
+                // Everything else denied
+                .anyRequest().denyAll()
+            )
+            .oauth2ResourceServer(oauth -> oauth
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+            );
 
         return http.build();
     }
 
-    private JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedConverter = new JwtGrantedAuthoritiesConverter();
-        grantedConverter.setAuthoritiesClaimName("roles");
-        grantedConverter.setAuthorityPrefix("ROLE_");
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
-        JwtAuthenticationConverter authConverter = new JwtAuthenticationConverter();
-        authConverter.setJwtGrantedAuthoritiesConverter(grantedConverter);
-        return authConverter;
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        authoritiesConverter.setAuthorityPrefix("ROLE_");
+        authoritiesConverter.setAuthoritiesClaimName("roles");
+
+        JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
+        authenticationConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+        return authenticationConverter;
     }
 }

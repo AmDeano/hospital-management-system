@@ -11,7 +11,6 @@ import java.util.Optional;
 public class DetermineDashboardRouteUseCase {
 
     public String execute(Collection<? extends GrantedAuthority> authorities) {
-        // Map authorities -> role names, normalize
         Optional<String> mainRole = authorities.stream()
             .map(GrantedAuthority::getAuthority)
             .map(auth -> auth.startsWith("ROLE_") ? auth.substring(5) : auth)

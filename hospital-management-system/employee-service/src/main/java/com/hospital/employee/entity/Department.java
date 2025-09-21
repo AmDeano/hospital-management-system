@@ -46,6 +46,11 @@ public class Department {
 //        this.supervisor = supervisor;
 //        this.employees = new ArrayList<>();
 //    }
+    
+    public String getName() {
+        return name;
+    }
+
 
     // Utility methods
     public void addEmployee(Employee employee) {

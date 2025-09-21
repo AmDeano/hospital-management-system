@@ -6,7 +6,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-//import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +22,7 @@ public class AdministrativeStaffController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AdministrativeStaff> create(@Valid @RequestBody AdministrativeStaff staff) {
         return ResponseEntity.status(HttpStatus.CREATED).body(staffUseCase.create(staff));
     }
@@ -36,6 +35,11 @@ public class AdministrativeStaffController {
     @GetMapping("/{id}")
     public ResponseEntity<AdministrativeStaff> get(@PathVariable Long id) {
         return ResponseEntity.ok(staffUseCase.findById(id));
+    }
+
+    @GetMapping("/area/{area}")
+    public ResponseEntity<List<AdministrativeStaff>> getByArea(@PathVariable String area) {
+        return ResponseEntity.ok(staffUseCase.findByDepartmentArea(area));
     }
 
     @PutMapping("/{id}")

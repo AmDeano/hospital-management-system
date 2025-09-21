@@ -1,6 +1,7 @@
 package com.hospital.employee.usecase;
 
 import com.hospital.employee.entity.Department;
+import com.hospital.employee.exception.InvalidEmployeeDataException;
 import com.hospital.employee.repository.DepartmentRepository;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,9 @@ public class DepartmentUseCaseImpl implements DepartmentUseCase {
 
     @Override
     public Department save(Department department) {
+        if (department.getName() == null || department.getName().isBlank()) {
+            throw new InvalidEmployeeDataException("Department must have a name");
+        }
         return repository.save(department);
     }
 }

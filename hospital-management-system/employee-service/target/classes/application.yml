@@ -1,13 +1,6 @@
-server:
-  port: 8082
-  servlet:
-    context-path: /employee-service
-
 spring:
   application:
     name: employee-service
-  profiles:
-    active: default
 
   security:
     oauth2:
@@ -15,64 +8,8 @@ spring:
         jwt:
           jwk-set-uri: http://auth-service:8083/auth-service/.well-known/jwks.json
 
-# ========== DEFAULT (local dev, H2 in-memory) ==========
   datasource:
-    url: jdbc:h2:mem:employeedb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: sa
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-    database-platform: org.hibernate.dialect.H2Dialect
-    properties:
-      hibernate:
-        format_sql: true
-
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.sql
-      data-locations: classpath:data.sql
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: always
-
-logging:
-  level:
-    com.hospital.employee: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.jdbc.datasource.init: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    root: INFO
-
-# ========== DOCKER (real DB + RabbitMQ) ==========
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-
-  datasource:
-    url: jdbc:mysql://mysql-auth:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3308/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: AmDee
     password: AmDee
@@ -83,25 +20,56 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.MySQL8Dialect
 
-  sql:
-    init:
-      mode: never   # handled by migrations (Flyway/Liquibase recommended)
+server:
+  port: 8082
+  servlet:
+    context-path: /employee-service
 
-  rabbitmq:
-    host: rabbitmq
-    port: 5672
-    username: admin
-    password: admin123
-    virtual-host: /
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.hospital.employee: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web: DEBUG
+    root: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:mysql://mysql-employee:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: AmDee
+    password: AmDee
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8082
 
 logging:
   level:
     com.hospital.employee: INFO
+    org.springframework.security: INFO
     root: INFO
 
-# ========== PROD (externalized config) ==========
 ---
 spring:
   config:
@@ -109,31 +77,21 @@ spring:
       on-profile: prod
 
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://prod-db:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    url: ${DATABASE_URL:jdbc:mysql://mysql-employee:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
     driver-class-name: ${DATABASE_DRIVER:com.mysql.cj.jdbc.Driver}
     username: ${DATABASE_USERNAME:AmDee}
     password: ${DATABASE_PASSWORD:AmDee}
 
   jpa:
     hibernate:
-      ddl-auto: validate   # only validate schema
+      ddl-auto: validate
     show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
 
-  sql:
-    init:
-      mode: never
-
-  rabbitmq:
-    host: ${RABBITMQ_HOST:rabbitmq}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:admin}
-    password: ${RABBITMQ_PASSWORD:admin123}
-    virtual-host: ${RABBITMQ_VHOST:/}
+server:
+  port: 8082
 
 logging:
   level:
-    com.hospital.employee: WARN
-    root: INFO
+    com.hospital.employee: INFO
+    org.springframework.security: WARN
+    root: WARN

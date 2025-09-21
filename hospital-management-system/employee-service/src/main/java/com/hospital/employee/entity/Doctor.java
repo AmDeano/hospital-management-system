@@ -62,6 +62,12 @@ public class Doctor extends Employee {
         );
     }
 
+    public String authorizePatientDischarge(Long patientId) {
+    	return "Doctor " + getFullName() + "authorized discharge for patient" + patientId;
+    }
+    public String writeMedicaleCertificate(Long patientId) {
+    	return "Doctor " + getFullName() + "issued a medical certifivate for patient " + patientId;
+    }
 	public String getSpecialization() {
 		return specialization;
 	}

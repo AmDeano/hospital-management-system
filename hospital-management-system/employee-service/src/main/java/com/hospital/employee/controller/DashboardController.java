@@ -1,7 +1,6 @@
 package com.hospital.employee.controller;
 
 import com.hospital.employee.usecase.DetermineDashboardRouteUseCase;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +17,7 @@ public class DashboardController {
         this.determineDashboardRouteUseCase = determineDashboardRouteUseCase;
     }
 
-    @GetMapping("/employee/dashboard-route")
+    @GetMapping("/employee-service/api/dashboard-route")
     public Map<String, String> getDashboardRoute(Authentication authentication) {
         String route = determineDashboardRouteUseCase.execute(authentication.getAuthorities());
         return Map.of("dashboardRoute", route);
