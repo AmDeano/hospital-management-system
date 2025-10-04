@@ -32,7 +32,7 @@ public class TokenController {
 
     @GetMapping("/me")
     public UserAccount me(@AuthenticationPrincipal Jwt jwt){
-        return userRepository.findByUsername(jwt.getSubject()).orElseThrow();
+        return userRepository.findByMatricule(jwt.getSubject()).orElseThrow();
     }
 
     @PostMapping("/change-password")

@@ -2,6 +2,9 @@
 package com.hospital.employee.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+//import com.fasterxml.jackson.annotation.JsonSubTypes;
+//import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -17,6 +20,18 @@ import java.util.Objects;
 @Table(name = "employees")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "employee_type", discriminatorType = DiscriminatorType.STRING)
+//@JsonTypeInfo(
+//	    use = JsonTypeInfo.Id.NAME,
+//	    include = JsonTypeInfo.As.PROPERTY,
+//	    property = "employeeType"
+//	)
+//	@JsonSubTypes({
+//	    @JsonSubTypes.Type(value = Doctor.class, name = "DOCTOR"),
+//	    @JsonSubTypes.Type(value = Nurse.class, name = "NURSE"),
+//	    @JsonSubTypes.Type(value = AdministrativeStaff.class, name = "ADMINISTRATIVE_STAFF"),
+//	    @JsonSubTypes.Type(value = Receptionist.class, name = "RECEPTIONIST"),
+//	    @JsonSubTypes.Type(value = Observator.class, name = "OBSERVATOR")
+//	})
 public abstract class Employee {
 
     @Id
@@ -35,7 +50,7 @@ public abstract class Employee {
 
     @Email(message = "Invalid email format")
     private String email;
-
+    
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -80,7 +95,7 @@ public abstract class Employee {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
-
+    
     public Department getDepartment() { return department; }
     public void setDepartment(Department department) { this.department = department; }
 

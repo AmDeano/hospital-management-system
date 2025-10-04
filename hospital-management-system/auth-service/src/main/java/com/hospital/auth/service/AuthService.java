@@ -1,8 +1,12 @@
 package com.hospital.auth.service;
 
+import com.hospital.auth.config.RabbitConfig;
 import com.hospital.auth.dto.*;
 import com.hospital.auth.entity.*;
 import com.hospital.auth.repo.UserRepository;
+import com.hospital.common.events.EmployeeCreatedEvent;
+
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
@@ -22,24 +26,27 @@ public class AuthService {
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
     private final DashboardService dashboardService;
+    private final RabbitTemplate rabbitTemplate;
 
     public AuthService(UserRepository users,
                        PasswordEncoder encoder,
                        JwtEncoder jwtEncoder,
                        JwtDecoder jwtDecoder,
-                       DashboardService dashboardService) {
+                       DashboardService dashboardService,
+                       RabbitTemplate rabbitTemplate) {
         this.users = users;
         this.encoder = encoder;
         this.jwtEncoder = jwtEncoder;
         this.jwtDecoder = jwtDecoder;
         this.dashboardService = dashboardService;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     /**
      * Patients can self-register; role is always PATIENT (client-supplied role ignored).
      */
     public void registerPatient(PatientRegisterRequest req) {
-        if (users.existsByUsername(req.username())) {
+        if (users.existsByMatricule(req.username())) {
             throw new RuntimeException("Username already taken");
         }
         if (req.email() != null && users.existsByEmail(req.email())) {
@@ -47,7 +54,7 @@ public class AuthService {
         }
 
         var account = new UserAccount();
-        account.setUsername(req.username());
+        account.setMatricule(req.username());
         account.setEmail(req.email());
         account.setPasswordHash(encoder.encode(req.password()));
         account.setRoles(Set.of(Role.PATIENT));
@@ -61,7 +68,7 @@ public class AuthService {
     public void registerEmployee(RegisterRequest req) {
         validateEmployeeRegistration(req);
 
-        if (users.existsByUsername(req.username())) {
+        if (users.existsByMatricule(req.matricule())) {
             throw new RuntimeException("Username already taken");
         }
         if (req.email() != null && users.existsByEmail(req.email())) {
@@ -78,19 +85,25 @@ public class AuthService {
         }
 
         var account = new UserAccount();
-        account.setUsername(req.username());
+        account.setMatricule(req.matricule());
         account.setEmail(req.email());
         account.setPasswordHash(encoder.encode(req.password()));
+        account.setFirstName(req.firstName());  
+        account.setLastName(req.lastName());
         account.setRoles(employeeRoles);
         account.setExternalId(req.externalId());
-        users.save(account);
+
+
+        UserAccount saved = users.save(account);
+        
+        publishEmployeeCreatedEvent(saved);
     }
 
     /**
      * Register admin - Only for existing admins
      */
     public void registerAdmin(RegisterRequest req) {
-        if (users.existsByUsername(req.username())) {
+        if (users.existsByMatricule(req.matricule())) {
             throw new RuntimeException("Username already taken");
         }
         if (req.email() != null && users.existsByEmail(req.email())) {
@@ -98,19 +111,44 @@ public class AuthService {
         }
 
         var account = new UserAccount();
-        account.setUsername(req.username());
+        account.setMatricule(req.matricule());
         account.setEmail(req.email());
         account.setPasswordHash(encoder.encode(req.password()));
         account.setRoles(Set.of(Role.ADMIN));
+        account.setFirstName(req.firstName());  // ADD THIS
+        account.setLastName(req.lastName());    // ADD THIS
         account.setExternalId(req.externalId());
-        users.save(account);
-    }
+        UserAccount saved = users.save(account);
 
+        // PUBLISH EVENT TO EMPLOYEE-SERVICE
+        publishEmployeeCreatedEvent(saved);
+    }
+    
+ // ADD THIS METHOD
+    private void publishEmployeeCreatedEvent(UserAccount user) {
+        Set<String> roleNames = user.getRoles().stream()
+                .map(Enum::name)
+                .collect(Collectors.toSet());
+
+        EmployeeCreatedEvent event = new EmployeeCreatedEvent(
+            user.getId(),
+            user.getMatricule(),
+            user.getEmail(),
+            user.getFirstName(),
+            user.getLastName(),
+            null, // passwordHash not sent for security
+            roleNames,
+            user.getExternalId()
+        );
+
+        rabbitTemplate.convertAndSend(RabbitConfig.EMPLOYEE_CREATED_QUEUE, event);
+        System.out.println("📤 Published EmployeeCreatedEvent for: " + user.getMatricule());
+    }
     /**
      * Employees can log in; must have a non-PATIENT role.
      */
     public AuthResponse loginEmployee(LoginRequest req) {
-        var user = users.findByUsername(req.username())
+        var user = users.findByMatricule(req.matricule())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
         var hasEmployeeRole = user.getRoles() != null &&
@@ -129,7 +167,7 @@ public class AuthService {
      * Patient login - separate endpoint for patients
      */
     public AuthResponse loginPatient(LoginRequest req) {
-        var user = users.findByUsername(req.username())
+        var user = users.findByMatricule(req.matricule())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
         var isPatient = user.getRoles() != null &&
@@ -157,7 +195,7 @@ public class AuthService {
                 throw new RuntimeException("Invalid token type");
             }
 
-            var user = users.findByUsername(jwt.getSubject())
+            var user = users.findByMatricule(jwt.getSubject())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             if (!user.isEnabled()) {
@@ -174,7 +212,7 @@ public class AuthService {
      * Change password for authenticated user
      */
     public void changePassword(String username, String oldPassword, String newPassword) {
-        var user = users.findByUsername(username)
+        var user = users.findByMatricule(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!encoder.matches(oldPassword, user.getPasswordHash())) {
@@ -189,7 +227,7 @@ public class AuthService {
      * Enable/Disable user account
      */
     public void toggleUserAccount(String username, boolean enabled) {
-        var user = users.findByUsername(username)
+        var user = users.findByMatricule(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setEnabled(enabled);
@@ -229,7 +267,7 @@ public class AuthService {
                 .issuer("auth-service")
                 .issuedAt(now)
                 .expiresAt(now.plus(15, ChronoUnit.MINUTES))
-                .subject(user.getUsername())
+                .subject(user.getMatricule())
                 .claim("uid", user.getId())
                 .claim("email", user.getEmail())
                 .claim("roles", roleNames)
@@ -243,7 +281,7 @@ public class AuthService {
                 .issuer("auth-service")
                 .issuedAt(now)
                 .expiresAt(now.plus(7, ChronoUnit.DAYS))
-                .subject(user.getUsername())
+                .subject(user.getMatricule())
                 .claim("type", "refresh")
                 .build();
 
@@ -263,7 +301,7 @@ public class AuthService {
                 refreshToken,
                 "Bearer",
                 user.getId(),
-                user.getUsername(),
+                user.getMatricule(),
                 user.getEmail(),
                 user.getExternalId(),
                 user.getRoles(),

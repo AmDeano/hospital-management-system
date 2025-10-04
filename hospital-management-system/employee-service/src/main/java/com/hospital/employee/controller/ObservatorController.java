@@ -3,7 +3,6 @@ package com.hospital.employee.controller;
 import com.hospital.employee.entity.Observator;
 import com.hospital.employee.usecase.ObservatorUseCaseImpl;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/employee-service/api/observators")
+@RequestMapping("/api/observators")
 @PreAuthorize("hasRole('ADMIN') or hasRole('OBSERVATOR')")
 public class ObservatorController {
 
@@ -19,12 +18,6 @@ public class ObservatorController {
 
     public ObservatorController(ObservatorUseCaseImpl observatorUseCase) {
         this.observatorUseCase = observatorUseCase;
-    }
-
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Observator> create(@Valid @RequestBody Observator observator) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(observatorUseCase.create(observator));
     }
 
     @GetMapping

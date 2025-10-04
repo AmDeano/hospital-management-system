@@ -6,7 +6,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://auth-service:8083/auth-service/.well-known/jwks.json
+          jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8083/auth-service}/.well-known/jwks.json
 
   datasource:
     url: jdbc:mysql://localhost:3308/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -20,7 +20,13 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  rabbitmq:   # ✅ must be under spring
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
 
 server:
   port: 8082
@@ -44,6 +50,7 @@ logging:
     org.springframework.web: DEBUG
     root: INFO
 
+# ========== DOCKER PROFILE ==========
 ---
 spring:
   config:
@@ -61,6 +68,11 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  rabbitmq:   # ✅ must be under spring
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin123
 server:
   port: 8082
 
@@ -70,6 +82,7 @@ logging:
     org.springframework.security: INFO
     root: INFO
 
+# ========== PROD PROFILE ==========
 ---
 spring:
   config:
@@ -86,6 +99,12 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
+
+  rabbitmq:   # ✅ must be under spring
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin123
 
 server:
   port: 8082

@@ -5,8 +5,8 @@ public enum Role {
     NURSE,
     HR,
     LOGISTICS,
-    RECEPTION,
+    RECEPTIONIST,
     OBSERVATOR,
     SUPERVISOR,
-    ADMIN
+    ADMIN,
 }

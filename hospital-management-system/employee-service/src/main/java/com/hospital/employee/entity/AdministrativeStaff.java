@@ -27,7 +27,9 @@ public class AdministrativeStaff extends Employee {
 //        super();
 //        this.departmentArea = departmentArea;
 //    }
-
+    public void setDepartmentArea(String departmentArea) {
+    	this.departmentArea = departmentArea; 
+    }
     @Override
     public boolean canAccessPatientData() {
         return false;

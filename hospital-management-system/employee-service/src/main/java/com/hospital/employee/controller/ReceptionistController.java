@@ -3,7 +3,6 @@ package com.hospital.employee.controller;
 import com.hospital.employee.entity.Receptionist;
 import com.hospital.employee.usecase.ReceptionistUseCaseImpl;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/employee-service/api/receptionists")
+@RequestMapping("/api/receptionists")
 @PreAuthorize("hasRole('ADMIN') or hasRole('RECEPTIONIST') or hasRole('SUPERVISOR')")
 public class ReceptionistController {
 
@@ -20,12 +19,6 @@ public class ReceptionistController {
 
     public ReceptionistController(ReceptionistUseCaseImpl receptionistUseCase) {
         this.receptionistUseCase = receptionistUseCase;
-    }
-
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Receptionist> create(@Valid @RequestBody Receptionist receptionist) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(receptionistUseCase.create(receptionist));
     }
 
     @GetMapping

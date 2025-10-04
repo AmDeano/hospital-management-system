@@ -10,7 +10,7 @@ public record AuthResponse(
 	    String refreshToken,
 	    String tokenType,
 	    Long userId,
-	    String username,
+	    String matricule,
 	    String email,
 	    String externalId,
 	    Set<Role> roles,

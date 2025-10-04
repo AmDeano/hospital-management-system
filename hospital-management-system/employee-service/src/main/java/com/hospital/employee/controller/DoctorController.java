@@ -3,7 +3,6 @@ package com.hospital.employee.controller;
 import com.hospital.employee.entity.Doctor;
 import com.hospital.employee.usecase.DoctorUseCaseImpl;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,22 +10,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/employee-service/api/doctors")
+@RequestMapping("/api/doctors")
 @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or hasRole('SUPERVISOR')")
 public class DoctorController {
 
     private final DoctorUseCaseImpl doctorUseCase;
 
+
     public DoctorController(DoctorUseCaseImpl doctorUseCase) {
         this.doctorUseCase = doctorUseCase;
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('HR')")
-    public ResponseEntity<Doctor> createDoctor(@Valid @RequestBody Doctor doctor) {
-        Doctor created = doctorUseCase.create(doctor);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
 
     @GetMapping
     public ResponseEntity<List<Doctor>> getAllDoctors() {

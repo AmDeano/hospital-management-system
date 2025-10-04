@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/employee-service/api/adminstaff")
+@RequestMapping("/api/adminstaff")
 @PreAuthorize("hasRole('ADMIN') or hasRole('HR') or hasRole('SUPERVISOR')")
 public class AdministrativeStaffController {
 
@@ -21,11 +21,6 @@ public class AdministrativeStaffController {
         this.staffUseCase = staffUseCase;
     }
 
-    @PostMapping
-    // @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AdministrativeStaff> create(@Valid @RequestBody AdministrativeStaff staff) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(staffUseCase.create(staff));
-    }
 
     @GetMapping
     public ResponseEntity<List<AdministrativeStaff>> all() {

@@ -5,10 +5,13 @@ import com.hospital.employee.exception.DuplicateEmployeeException;
 import com.hospital.employee.exception.InvalidEmployeeDataException;
 import com.hospital.employee.repository.DoctorRepository;
 import com.hospital.employee.repository.DepartmentRepository;
+
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -16,12 +19,19 @@ public class DoctorUseCaseImpl extends AbstractEmployeeUseCase<Doctor> {
 
     private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     public DoctorUseCaseImpl(DoctorRepository doctorRepository,
-                             DepartmentRepository departmentRepository) {
-        super(doctorRepository);
+                             DepartmentRepository departmentRepository, RabbitTemplate rabbitTemplate) {
+        super(doctorRepository, rabbitTemplate);
         this.doctorRepository = doctorRepository;
         this.departmentRepository = departmentRepository;
+		this.rabbitTemplate = rabbitTemplate;
+    }
+    
+    @Override
+    protected Set<String> determineRoles(Doctor doctor) {
+        return Set.of("DOCTOR", "EMPLOYEE");
     }
 
     @Override

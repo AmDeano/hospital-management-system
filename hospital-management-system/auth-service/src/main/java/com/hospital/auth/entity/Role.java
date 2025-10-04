@@ -10,6 +10,7 @@ public enum Role {
   OBSERVATOR("observator"),
   SUPERVISOR("supervisor"),
   PATIENT("Patient");
+  //EMPLOYEE("Employee");
 
   private final String displayName;
 

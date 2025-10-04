@@ -21,6 +21,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+      start_period: 30s
 
   mysql-employee:
     image: mysql:8.0
@@ -42,22 +43,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    container_name: phpmyadmin
-    environment:
-      PMA_ARBITRARY: 1          # ✅ permet connexion à plusieurs serveurs
-      PMA_HOSTS: mysql-auth,mysql-employee
-      PMA_USER: root
-      PMA_PASSWORD: rootpass
-    ports:
-      - "8085:80"
-    depends_on:
-      - mysql-auth
-      - mysql-employee
-    networks:
-      - hospital-network
+      start_period: 30s
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -73,10 +59,11 @@ services:
     networks:
       - hospital-network
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 30s
 
   auth-service:
     build:
@@ -95,35 +82,45 @@ services:
         condition: service_healthy
     networks:
       - hospital-network
+    restart: unless-stopped
+    # Simple health check that should work
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/auth-service/actuator/health || exit 1"]
-      interval: 15s
+      test: ["CMD", "curl", "-f", "http://localhost:8083/auth-service/actuator/health"]
+      interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
 
-  patient-service:
-    build:
-      context: .
-      dockerfile: patient-service/Dockerfile.patient-service
-    container_name: patient-service
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
-    ports:
-      - "8081:8081"
-    depends_on:
-      auth-service:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - hospital-network
-    volumes:
-      - patient_data:/app/data
+  #patient-service:
+  #  build:
+  #    context: .
+  #    dockerfile: patient-service/Dockerfile.patient-service
+  #  container_name: patient-service
+  #  environment:
+  #    SPRING_PROFILES_ACTIVE: docker
+  #    SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
+  #    SPRING_RABBITMQ_HOST: rabbitmq
+  #    SPRING_RABBITMQ_PORT: 5672
+  #    SPRING_RABBITMQ_USERNAME: admin
+  #    SPRING_RABBITMQ_PASSWORD: admin123
+  #  ports:
+  #    - "8081:8081"
+  #  depends_on:
+  #    auth-service:
+  #      condition: service_healthy
+  #    rabbitmq:
+  #      condition: service_healthy
+  #  networks:
+  #    - hospital-network
+  #  volumes:
+  #    - patient_data:/app/data
+  #  restart: unless-stopped
+  #  healthcheck:
+  #    test: ["CMD", "curl", "-f", "http://localhost:8081/patient-service/actuator/health"]
+  #    interval: 30s
+  #    timeout: 10s
+  #    retries: 5
+  #    start_period: 60s
 
   employee-service:
     build:
@@ -132,6 +129,7 @@ services:
     container_name: employee-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      AUTH_SERVICE_URL: http://auth-service:8083/auth-service
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-employee:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: AmDee
@@ -145,11 +143,13 @@ services:
         condition: service_healthy
     networks:
       - hospital-network
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8082/employee-service/actuator/health || exit 1"]
-      interval: 15s
+      test: ["CMD", "curl", "-f", "http://localhost:8082/employee-service/actuator/health"]
+      interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
 
   api-gateway:
     build:
@@ -159,36 +159,42 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - auth-service
-      - patient-service
-      - employee-service
+      auth-service:
+        condition: service_healthy
+      #patient-service:
+        #condition: service_healthy
+      employee-service:
+        condition: service_healthy
     networks:
       - hospital-network
     volumes:
       - ./api-gateway/nginx-api-gateway.conf:/etc/nginx/nginx-api-gateway.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
-  employee-frontend:
-    build:
-      context: ./Front/employee-front
-      dockerfile: Dockerfile.employee-front
-    container_name: employee-frontend-dev
-    ports:
-      - "4200:4200"
-      - "49153:49153"
-    volumes:
-      - ./Front/employee-front:/app
-      - /app/node_modules
-      - /app/dist
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
     environment:
-      NODE_ENV: development
-      NG_CLI_ANALYTICS: false
-      API_BASE_URL: http://localhost/api
-      AUTH_SERVICE_URL: http://localhost/api/auth
+      PMA_ARBITRARY: 1
+      PMA_HOSTS: mysql-auth,mysql-employee
+      PMA_USER: root
+      PMA_PASSWORD: rootpass
+    ports:
+      - "8085:80"
+    depends_on:
+      mysql-auth:
+        condition: service_healthy
+      mysql-employee:
+        condition: service_healthy
     networks:
       - hospital-network
     restart: unless-stopped
-    stdin_open: true
-    tty: true
 
 networks:
   hospital-network:
@@ -201,7 +207,5 @@ volumes:
     driver: local
   rabbitmq_data:
     driver: local
-  patient_data:
-    driver: local
-  employee_data:
-    driver: local
+  #patient_data:
+    #driver: local

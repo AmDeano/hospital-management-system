@@ -32,6 +32,22 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+	<dependency>
+    	<groupId>com.hospital</groupId>
+    	<artifactId>common</artifactId>
+    	<version>1.0.0</version>
+	</dependency>
+	<!-- ✅ RabbitMQ Starter -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+
+    <!-- JSON message converter (already included with Spring AMQP, but explicit is safe) -->
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+    </dependency>
 
 
 		<!-- Password hashing -->

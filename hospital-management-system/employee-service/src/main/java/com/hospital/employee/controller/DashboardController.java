@@ -17,7 +17,7 @@ public class DashboardController {
         this.determineDashboardRouteUseCase = determineDashboardRouteUseCase;
     }
 
-    @GetMapping("/employee-service/api/dashboard-route")
+    @GetMapping("/api/dashboard-route")
     public Map<String, String> getDashboardRoute(Authentication authentication) {
         String route = determineDashboardRouteUseCase.execute(authentication.getAuthorities());
         return Map.of("dashboardRoute", route);

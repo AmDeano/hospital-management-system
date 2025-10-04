@@ -34,9 +34,9 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeDefaultAdmin() {
         String adminUsername = "admin";
         
-        if (!userRepository.existsByUsername(adminUsername)) {
+        if (!userRepository.existsByMatricule(adminUsername)) {
             UserAccount admin = new UserAccount();
-            admin.setUsername(adminUsername);
+            admin.setMatricule(adminUsername);
             admin.setEmail("admin@hospital.com");
             admin.setPasswordHash(passwordEncoder.encode("admin123"));
             admin.setRoles(Set.of(Role.ADMIN));
@@ -53,9 +53,9 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeDefaultHR() {
         String hrUsername = "hr";
         
-        if (!userRepository.existsByUsername(hrUsername)) {
+        if (!userRepository.existsByMatricule(hrUsername)) {
             UserAccount hr = new UserAccount();
-            hr.setUsername(hrUsername);
+            hr.setMatricule(hrUsername);
             hr.setEmail("hr@hospital.com");
             hr.setPasswordHash(passwordEncoder.encode("hr123"));
             hr.setRoles(Set.of(Role.HR));

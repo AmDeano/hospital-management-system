@@ -12,7 +12,7 @@ import com.hospital.employee.usecase.DepartmentUseCase;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/employee-service/api/departments")
+@RequestMapping("/api/departments")
 public class DepartmentController {
 
     private final DepartmentUseCase useCase;
