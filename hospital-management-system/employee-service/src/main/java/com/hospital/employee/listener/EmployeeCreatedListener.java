@@ -31,9 +31,8 @@ public class EmployeeCreatedListener {
 
     @RabbitListener(queues = "employee.created.queue")
     public void handleEmployeeCreated(EmployeeCreatedEvent event) {
-        System.out.println("📥 Received EmployeeCreatedEvent: " + event.getMatricule());
+        System.out.println("Received EmployeeCreatedEvent: " + event.getMatricule());
 
-        // Get primary role
         String primaryRole = event.getRoles().iterator().next();
         
         try {
@@ -45,11 +44,11 @@ public class EmployeeCreatedListener {
                 case RECEPTIONIST -> createReceptionist(event);
                 case ADMIN, HR -> createAdminStaff(event);
                 case OBSERVATOR -> createObservator(event);
-                default -> System.out.println("⚠️ Unhandled role: " + primaryRole);
+                default -> System.out.println("Unhandled role: " + primaryRole);
             }
             
         } catch (IllegalArgumentException e) {
-            System.err.println("❌ Unknown role: " + primaryRole);
+            System.err.println("Unknown role: " + primaryRole);
         }
     }
 
@@ -61,13 +60,26 @@ public class EmployeeCreatedListener {
         Doctor doctor = new Doctor();
         setCommonFields(doctor, event);
         doctor.setRole(Role.DOCTOR);
-        // Set default values - will be updated later by employee-service API
-        doctor.setSpecialization("General");
-        doctor.setLicenseNumber("PENDING");
-        doctor.setMedicalDegree("PENDING");
+        
+        // Set doctor-specific fields with validation
+        doctor.setSpecialization(
+            event.getSpecialization() != null && !event.getSpecialization().isBlank() 
+                ? event.getSpecialization() 
+                : "General"
+        );
+        doctor.setLicenseNumber(
+            event.getLicenseNumber() != null && !event.getLicenseNumber().isBlank()
+                ? event.getLicenseNumber()
+                : "PENDING"
+        );
+        doctor.setMedicalDegree(
+            event.getMedicalDegree() != null && !event.getMedicalDegree().isBlank()
+                ? event.getMedicalDegree()
+                : "PENDING"
+        );
         
         doctorRepository.save(doctor);
-        System.out.println("✅ Created Doctor: " + event.getMatricule());
+        System.out.println("Created Doctor: " + event.getMatricule());
     }
 
     private void createNurse(EmployeeCreatedEvent event) {
@@ -78,11 +90,20 @@ public class EmployeeCreatedListener {
         Nurse nurse = new Nurse();
         setCommonFields(nurse, event);
         nurse.setRole(Role.NURSE);
-        nurse.setShift("DAY"); // default
-        //nurse.setLicenseNumber("PENDING");
+        
+        nurse.setShift(
+            event.getShift() != null && !event.getShift().isBlank()
+                ? event.getShift()
+                : "DAY"
+        );
+        nurse.setNursingLicense(
+            event.getNurseLicenseNumber() != null && !event.getNurseLicenseNumber().isBlank()
+                ? event.getNurseLicenseNumber()
+                : "PENDING"
+        );
         
         nurseRepository.save(nurse);
-        System.out.println("✅ Created Nurse: " + event.getMatricule());
+        System.out.println("Created Nurse: " + event.getMatricule());
     }
 
     private void createReceptionist(EmployeeCreatedEvent event) {
@@ -93,10 +114,15 @@ public class EmployeeCreatedListener {
         Receptionist receptionist = new Receptionist();
         setCommonFields(receptionist, event);
         receptionist.setRole(Role.RECEPTIONIST);
-        receptionist.setDeskNumber("PENDING");
+        
+        receptionist.setDeskNumber(
+            event.getDeskNumber() != null && !event.getDeskNumber().isBlank()
+                ? event.getDeskNumber()
+                : "PENDING"
+        );
         
         receptionistRepository.save(receptionist);
-        System.out.println("✅ Created Receptionist: " + event.getMatricule());
+        System.out.println("Created Receptionist: " + event.getMatricule());
     }
 
     private void createAdminStaff(EmployeeCreatedEvent event) {
@@ -107,10 +133,15 @@ public class EmployeeCreatedListener {
         AdministrativeStaff staff = new AdministrativeStaff();
         setCommonFields(staff, event);
         staff.setRole(event.getRoles().contains("ADMIN") ? Role.ADMIN : Role.HR);
-        staff.setDepartmentArea("Administration");
+        
+        staff.setDepartmentArea(
+            event.getDepartmentArea() != null && !event.getDepartmentArea().isBlank()
+                ? event.getDepartmentArea()
+                : "Administration"
+        );
         
         adminStaffRepository.save(staff);
-        System.out.println("✅ Created Admin Staff: " + event.getMatricule());
+        System.out.println("Created Admin Staff: " + event.getMatricule());
     }
 
     private void createObservator(EmployeeCreatedEvent event) {
@@ -121,10 +152,15 @@ public class EmployeeCreatedListener {
         Observator observator = new Observator();
         setCommonFields(observator, event);
         observator.setRole(Role.OBSERVATOR);
-        observator.setAssignedArea("General");
+        
+        observator.setAssignedArea(
+            event.getAssignedArea() != null && !event.getAssignedArea().isBlank()
+                ? event.getAssignedArea()
+                : "General"
+        );
         
         observatorRepository.save(observator);
-        System.out.println("✅ Created Observator: " + event.getMatricule());
+        System.out.println("Created Observator: " + event.getMatricule());
     }
 
     private void setCommonFields(Employee employee, EmployeeCreatedEvent event) {
@@ -132,6 +168,8 @@ public class EmployeeCreatedListener {
         employee.setFirstName(event.getFirstName());
         employee.setLastName(event.getLastName());
         employee.setEmail(event.getEmail());
+        employee.setPhone(event.getPhone());
+        employee.setAddress(event.getAddress());
         employee.setIsActive(true);
         employee.setHireDate(java.time.LocalDate.now());
     }

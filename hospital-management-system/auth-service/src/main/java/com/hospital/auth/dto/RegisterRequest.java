@@ -12,8 +12,28 @@ public record RegisterRequest(
     @NotBlank String password,
     @NotBlank String firstName,       // NEW
     @NotBlank String lastName,        // NEW
+    String phone,
+    String address,
     Set<Role> roles,
-    String externalId
+    String externalId,
+    
+    //Doc fields
+    String specialization,
+    String licenseNumber,
+    String medicalDegree,
+    
+    //Nurse fiel
+    String shift,
+    String nurseLicenseNumber,
+    
+    //Recep fields
+    String deskNumber,
+    
+    //Admin fields
+    String departmentArea,
+    
+    //Observator fields
+    String assignedArea
 ) {
 
 	public String getMatricule() {
@@ -32,4 +52,10 @@ public record RegisterRequest(
 		return roles;
 	}
 
+	public String getPhone() {
+		return phone;
+	}
+	public String getAddress() {
+		return address;
+	}
 }
