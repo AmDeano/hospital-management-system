@@ -2,7 +2,11 @@
 package com.hospital.auth.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Entity
@@ -28,6 +32,17 @@ public class UserAccount {
   private String lastName;
 
   private String externalId;
+  
+  private String CIN;
+
+  private LocalDate dateNaissance;
+  private String numeroTelephone;
+  private String numeroSecuriteSociale;
+  private String adresse;
+  private boolean isMinor;
+  private String parentCin;
+
+  
   
 
   @ElementCollection(fetch = FetchType.EAGER)
@@ -70,4 +85,29 @@ public class UserAccount {
 
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
+    
+	public String getCIN() { return CIN; }
+	public void setCIN(String CIN) { this.CIN = CIN; }
+	
+	public LocalDate getdateNaissance() { return dateNaissance; }
+	public void setdateNaissance(LocalDate dateNaissance) { this.dateNaissance = dateNaissance; }
+	
+	public String getnumeroSecuriteSociale() { return numeroSecuriteSociale; }
+	public void setnumeroSecuriteSociale(String numeroSecuriteSociale) { this.numeroSecuriteSociale = numeroSecuriteSociale; }
+	
+	
+	public String getadresse() { return adresse; }
+	public void setadresse(String adresse) { this.adresse = adresse; }
+	
+	
+	public boolean isMinor() { return false; }
+	public void setisMinor(boolean isMinor) { this.isMinor = false ; }
+	
+	
+	public String getparentCin() { return parentCin; }
+	public void setparentCin(String parentCin) { this.parentCin = parentCin; }
+	
+	
+	public String getnumeroTelephone() { return numeroTelephone; }
+	public void setnumeroTelephone(String numeroTelephone) { this.numeroTelephone = numeroTelephone; }
 }

@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -171,4 +172,32 @@ public interface UserRepository extends JpaRepository<UserAccount, Long> {
      */
     @Query("DELETE FROM UserAccount u WHERE u.enabled = false AND u.createdAt < :date")
     void deleteDisabledUsersOlderThan(@Param("date") Instant date);
+    
+ // ==================== PATIENT-SPECIFIC QUERIES ====================
+
+    /**
+     * Find patient by CIN
+     */
+    Optional<UserAccount> findByCIN(String cin);
+
+    /**
+     * Check if a CIN exists (for adults)
+     */
+    boolean existsByCIN(String cin);
+
+    /**
+     * Find patients by birth date
+     */
+    List<UserAccount> findByDateNaissance(LocalDate dateNaissance);
+
+    /**
+     * Find patients by minor status
+     */
+    List<UserAccount> findByIsMinor(Boolean isMinor);
+
+    /**
+     * Find patients by parent's CIN
+     */
+    List<UserAccount> findByParentCin(String parentCin);
+
 }

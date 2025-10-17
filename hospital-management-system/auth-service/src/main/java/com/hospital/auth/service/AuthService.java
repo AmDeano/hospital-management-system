@@ -5,6 +5,9 @@ import com.hospital.auth.dto.*;
 import com.hospital.auth.entity.*;
 import com.hospital.auth.repo.UserRepository;
 import com.hospital.common.events.EmployeeCreatedEvent;
+import com.hospital.common.events.PatientEvent;
+
+import jakarta.validation.constraints.Email;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +31,8 @@ public class AuthService {
     private static final int REFRESH_TOKEN_DAYS = 7;
     private static final String TOKEN_ISSUER = "auth-service";
     private static final String REFRESH_TOKEN_TYPE = "refresh";
+    private final PatientEventPublisher patientEventPublisher;
+
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -43,34 +46,47 @@ public class AuthService {
                        JwtEncoder jwtEncoder,
                        JwtDecoder jwtDecoder,
                        DashboardService dashboardService,
-                       RabbitTemplate rabbitTemplate) {
-        this.userRepository = Objects.requireNonNull(userRepository, "UserRepository is required");
-        this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "PasswordEncoder is required");
-        this.jwtEncoder = Objects.requireNonNull(jwtEncoder, "JwtEncoder is required");
-        this.jwtDecoder = Objects.requireNonNull(jwtDecoder, "JwtDecoder is required");
-        this.dashboardService = Objects.requireNonNull(dashboardService, "DashboardService is required");
-        this.rabbitTemplate = Objects.requireNonNull(rabbitTemplate, "RabbitTemplate is required");
+                       RabbitTemplate rabbitTemplate,
+                       PatientEventPublisher patientEventPublisher) {
+        this.userRepository = Objects.requireNonNull(userRepository);
+        this.passwordEncoder = Objects.requireNonNull(passwordEncoder);
+        this.jwtEncoder = Objects.requireNonNull(jwtEncoder);
+        this.jwtDecoder = Objects.requireNonNull(jwtDecoder);
+        this.dashboardService = Objects.requireNonNull(dashboardService);
+        this.rabbitTemplate = Objects.requireNonNull(rabbitTemplate);
+        this.patientEventPublisher = Objects.requireNonNull(patientEventPublisher);
     }
 
-    // ==================== REGISTRATION ====================
+    // ==================== PATIENT REGISTRATION ====================
 
     public void registerPatient(PatientRegisterRequest request) {
         validateNotNull(request, "Patient registration request");
-        validateUniqueCredentials(request.username(), request.email());
+        // Use CIN or email as unique identifier
+        validateUniqueEmail(request.email());
+        if (request.CIN() != null && !request.CIN().isBlank()) {
+            validateUniqueCIN(request.CIN());
+        }
 
-        UserAccount account = buildUserAccount(
-                request.username(),
-                request.email(),
-                request.password(),
-                null,
-                null,
-                Set.of(Role.PATIENT),
-                request.externalId()
-        );
-
+        UserAccount account = buildPatientAccount(request);
         userRepository.save(account);
-        log.info("Patient registered successfully: {}", request.username());
+
+        log.info("✅ Patient registered successfully: {}", account.getMatricule());
+        publishPatientCreatedEvent(account);
     }
+    private void validateUniqueCIN(String cin) {
+        if (cin != null && !cin.isBlank() && userRepository.existsByCIN(cin)) {
+            throw new IllegalArgumentException("CIN already exists: " + cin);
+        }
+    }
+
+    private void validateUniqueEmail(@Email String email) {
+        if (email != null && !email.isBlank() && userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already exists: " + email);
+        }
+    }
+
+
+	// ==================== EMPLOYEE REGISTRATION ====================
 
     public UserAccount registerEmployee(RegisterRequest request) {
         validateNotNull(request, "Employee registration request");
@@ -78,23 +94,12 @@ public class AuthService {
         validateUniqueCredentials(request.matricule(), request.email());
 
         Set<Role> employeeRoles = filterEmployeeRoles(request.roles());
-        
-        UserAccount account = buildUserAccount(
-                request.matricule(),
-                request.email(),
-                request.password(),
-                request.firstName(),
-                request.lastName(),
-                employeeRoles,
-                defaultIfNull(request.externalId(), request.matricule())
-        );
-
+        UserAccount account = buildEmployeeAccount(request, employeeRoles);
         UserAccount savedAccount = userRepository.save(account);
+
         publishEmployeeCreatedEvent(savedAccount, request);
-        
-        log.info("Employee registered successfully: {} with roles {}", 
-                savedAccount.getMatricule(), employeeRoles);
-        
+        log.info("✅ Employee registered successfully: {} with roles {}", savedAccount.getMatricule(), employeeRoles);
+
         return savedAccount;
     }
 
@@ -102,20 +107,12 @@ public class AuthService {
         validateNotNull(request, "Admin registration request");
         validateUniqueCredentials(request.matricule(), request.email());
 
-        UserAccount account = buildUserAccount(
-                request.matricule(),
-                request.email(),
-                request.password(),
-                request.firstName(),
-                request.lastName(),
-                Set.of(Role.ADMIN),
-                defaultIfNull(request.externalId(), request.matricule())
-        );
-
+        UserAccount account = buildEmployeeAccount(request, Set.of(Role.ADMIN));
         UserAccount savedAccount = userRepository.save(account);
+
         publishEmployeeCreatedEvent(savedAccount, request);
-        
-        log.info("Admin registered successfully: {}", savedAccount.getMatricule());
+        log.info("✅ Admin registered successfully: {}", savedAccount.getMatricule());
+
         return savedAccount;
     }
 
@@ -123,296 +120,177 @@ public class AuthService {
 
     public AuthResponse loginEmployee(LoginRequest request) {
         validateNotNull(request, "Login request");
-        
+
         UserAccount user = findUserByMatricule(request.matricule());
         validateEmployeeCredentials(user, request.password());
-        
+
         log.info("Employee logged in: {}", user.getMatricule());
         return buildAuthResponse(user);
     }
 
     public AuthResponse loginPatient(LoginRequest request) {
         validateNotNull(request, "Login request");
-        
+
         UserAccount user = findUserByMatricule(request.matricule());
         validatePatientCredentials(user, request.password());
-        
+
         log.info("Patient logged in: {}", user.getMatricule());
         return buildAuthResponse(user);
     }
-
+    
+    // ==================== refreshAccessToken ====================
+    
     public AuthResponse refreshAccessToken(String refreshToken) {
         try {
+            // Decode the provided refresh token
             Jwt jwt = jwtDecoder.decode(refreshToken);
-            validateRefreshTokenType(jwt);
 
-            UserAccount user = findUserByMatricule(jwt.getSubject());
-            
+            // Ensure this is indeed a refresh token
+            String tokenType = jwt.getClaimAsString("type");
+            if (tokenType == null || !tokenType.equals("refresh")) {
+                throw new IllegalArgumentException("Invalid token type. Expected a refresh token.");
+            }
+
+            // Extract the user (subject) from token claims
+            String matricule = jwt.getSubject();
+            if (matricule == null || matricule.isBlank()) {
+                throw new IllegalArgumentException("Invalid refresh token: missing subject");
+            }
+
+            // Find user in the database
+            UserAccount user = userRepository.findByMatricule(matricule)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found for refresh token"));
+
+            // Verify account is still enabled
             if (!user.isEnabled()) {
                 throw new IllegalStateException("User account is disabled");
             }
 
-            log.info("Token refreshed for user: {}", user.getMatricule());
+            // Build and return new AuthResponse (with new access & refresh tokens)
+            log.info("✅ Refresh token validated for user: {}", matricule);
             return buildAuthResponse(user);
-            
+
         } catch (JwtException e) {
-            log.warn("Invalid refresh token attempt");
+            log.error("❌ Invalid or expired refresh token: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid or expired refresh token", e);
         }
     }
 
-    // ==================== ACCOUNT MANAGEMENT ====================
+    // ==================== toggleAccountStatus ====================
+    
+    @Transactional
+    public void toggleAccountStatus(String matricule, boolean enabled) {
+        if (matricule == null || matricule.isBlank()) {
+            throw new IllegalArgumentException("Matricule cannot be blank");
+        }
+
+        // Find the user
+        UserAccount user = userRepository.findByMatricule(matricule)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with matricule: " + matricule));
+
+        // Update status
+        user.setEnabled(enabled);
+        userRepository.save(user);
+
+        String status = enabled ? "enabled" : "disabled";
+        log.info("✅ User '{}' account status changed to {}", matricule, status);
+    }
+
+
+    // ==================== PASSWORD MANAGEMENT ====================
 
     public void changePassword(String matricule, String oldPassword, String newPassword) {
         validateNotBlank(matricule, "Matricule");
         validateNotBlank(oldPassword, "Old password");
         validateNotBlank(newPassword, "New password");
-        
-        UserAccount user = findUserByMatricule(matricule);
 
+        UserAccount user = findUserByMatricule(matricule);
         if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        
         log.info("Password changed for user: {}", matricule);
     }
 
-    public void toggleAccountStatus(String matricule, boolean enabled) {
-        validateNotBlank(matricule, "Matricule");
-        
-        UserAccount user = findUserByMatricule(matricule);
-        user.setEnabled(enabled);
-        userRepository.save(user);
-        
-        log.info("User {} account status set to: {}", matricule, enabled ? "enabled" : "disabled");
-    }
+    // ==================== ACCOUNT BUILDERS ====================
 
-    // ==================== PRIVATE HELPERS - VALIDATION ====================
-
-    private void validateNotNull(Object obj, String fieldName) {
-        if (obj == null) {
-            throw new IllegalArgumentException(fieldName + " cannot be null");
-        }
-    }
-
-    private void validateNotBlank(String value, String fieldName) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(fieldName + " cannot be blank");
-        }
-    }
-
-    private void validateUniqueCredentials(String matricule, String email) {
-        if (matricule != null && userRepository.existsByMatricule(matricule)) {
-            throw new IllegalArgumentException("Matricule is already in use");
-        }
-        if (email != null && userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email is already in use");
-        }
-    }
-
-    private void validateEmployeeRequest(RegisterRequest request) {
-        if (request.roles() == null || request.roles().isEmpty()) {
-            throw new IllegalArgumentException("At least one role is required for employees");
-        }
-        
-        if (request.roles().contains(Role.PATIENT)) {
-            throw new IllegalArgumentException("PATIENT role cannot be assigned to employees");
-        }
-        
-        if (hasAdminWithOtherRoles(request.roles())) {
-            throw new IllegalArgumentException("ADMIN role cannot be combined with other roles");
-        }
-    }
-
-    private boolean hasAdminWithOtherRoles(Set<Role> roles) {
-        return roles.contains(Role.ADMIN) && roles.size() > 1;
-    }
-
-    private void validateEmployeeCredentials(UserAccount user, String password) {
-        if (!user.isEnabled()) {
-            throw new IllegalArgumentException("Account is disabled");
-        }
-        
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid credentials");
-        }
-        
-        if (!hasEmployeeRole(user)) {
-            throw new IllegalArgumentException("Account does not have employee privileges");
-        }
-    }
-
-    private void validatePatientCredentials(UserAccount user, String password) {
-        if (!user.isEnabled()) {
-            throw new IllegalArgumentException("Account is disabled");
-        }
-        
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid credentials");
-        }
-        
-        if (!hasPatientRole(user)) {
-            throw new IllegalArgumentException("Account does not have patient privileges");
-        }
-    }
-
-    private void validateRefreshTokenType(Jwt jwt) {
-        String tokenType = jwt.getClaimAsString("type");
-        if (!REFRESH_TOKEN_TYPE.equals(tokenType)) {
-            throw new IllegalArgumentException("Invalid token type");
-        }
-    }
-
-    // ==================== PRIVATE HELPERS - BUILDERS ====================
-
-    private UserAccount buildUserAccount(String matricule, String email, String password,
-                                         String firstName, String lastName,
-                                         Set<Role> roles, String externalId) {
-        validateNotBlank(matricule, "Matricule");
-        validateNotBlank(password, "Password");
-
+    private UserAccount buildPatientAccount(PatientRegisterRequest req) {
         UserAccount account = new UserAccount();
-        account.setMatricule(matricule);
-        account.setEmail(email);
-        account.setPasswordHash(passwordEncoder.encode(password));
-        account.setFirstName(firstName);
-        account.setLastName(lastName);
-        account.setRoles(roles != null ? roles : Collections.emptySet());
-        account.setExternalId(externalId);
-        account.setEnabled(true);
         
+        // Use CIN for adults as matricule, else generate a random ID for minors
+        if (req.CIN() != null && !req.CIN().isBlank()) {
+            account.setMatricule(req.CIN());
+            account.setCIN(req.CIN());
+        } else {
+            account.setMatricule("MINOR-" + java.util.UUID.randomUUID());
+            account.setCIN(null); // minors don't have CIN
+        }
+
+        account.setEmail(req.email());
+        account.setPasswordHash(passwordEncoder.encode(req.password()));
+        account.setRoles(Set.of(Role.PATIENT));
+        account.setEnabled(true);
+
+        // Patient personal info
+        account.setFirstName(req.firstName());
+        account.setLastName(req.lastName());
+        account.setdateNaissance(req.dateNaissance());
+        account.setnumeroTelephone(req.numeroTelephone());
+        account.setadresse(req.adresse());
+        account.setnumeroSecuriteSociale(req.numeroSecuriteSociale());
+        account.setparentCin(req.parentCin());
+
+        // Calculate isMinor based on birth date
+        if (req.dateNaissance() != null) {
+            int age = java.time.Period.between(req.dateNaissance(), java.time.LocalDate.now()).getYears();
+            account.setisMinor(age < 18);
+        } else {
+            account.setisMinor(false);
+        }
+
+        return account;
+    }
+    private UserAccount buildEmployeeAccount(RegisterRequest req, Set<Role> roles) {
+        UserAccount account = new UserAccount();
+        account.setMatricule(req.matricule());
+        account.setEmail(req.email());
+        account.setPasswordHash(passwordEncoder.encode(req.password()));
+        account.setFirstName(req.firstName());
+        account.setLastName(req.lastName());
+        account.setRoles(roles);
+        account.setEnabled(true);
+        account.setExternalId(defaultIfNull(req.externalId(), req.matricule()));
+        
+        account.setadresse(req.address());
+        account.setnumeroTelephone(req.phone());
+
         return account;
     }
 
-    private AuthResponse buildAuthResponse(UserAccount user) {
-        Instant now = Instant.now();
-        Set<String> roleNames = extractRoleNames(user);
+    // ==================== EVENT PUBLISHERS ====================
 
-        String accessToken = generateAccessToken(user, roleNames, now);
-        String refreshToken = generateRefreshToken(user, now);
-        String dashboardRoute = determineDashboardRoute(user);
+    private void publishPatientCreatedEvent(UserAccount user) {
+        try {
+            String fullName = (user.getFirstName() != null ? user.getFirstName() : "") + " " +
+                              (user.getLastName() != null ? user.getLastName() : "");
 
-        return new AuthResponse(
-                accessToken,
-                refreshToken,
-                "Bearer",
-                user.getId(),
-                user.getMatricule(),
-                user.getEmail(),
-                user.getExternalId(),
-                user.getRoles(),
-                dashboardRoute
-        );
-    }
+            patientEventPublisher.publishPatientCreatedEvent(
+                    user.getId().toString(),
+                    fullName.trim(),
+                    user.getEmail(),
+                    user.getCIN(),
+                    user.isMinor(),
+                    user.getparentCin()
+            );
 
-    private String generateAccessToken(UserAccount user, Set<String> roleNames, Instant now) {
-        JwtClaimsSet.Builder builder = JwtClaimsSet.builder()
-                .issuer(TOKEN_ISSUER)
-                .issuedAt(now)
-                .expiresAt(now.plus(ACCESS_TOKEN_MINUTES, ChronoUnit.MINUTES))
-                .subject(defaultIfNull(user.getMatricule(), "unknown"))
-                .claim("uid", user.getId());
-
-        addOptionalClaim(builder, "email", user.getEmail());
-        addOptionalClaim(builder, "ext", user.getExternalId());
-        
-        if (roleNames != null && !roleNames.isEmpty()) {
-            builder.claim("roles", roleNames);
-        }
-
-        return jwtEncoder.encode(JwtEncoderParameters.from(builder.build())).getTokenValue();
-    }
-
-    private String generateRefreshToken(UserAccount user, Instant now) {
-        JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer(TOKEN_ISSUER)
-                .issuedAt(now)
-                .expiresAt(now.plus(REFRESH_TOKEN_DAYS, ChronoUnit.DAYS))
-                .subject(defaultIfNull(user.getMatricule(), "unknown"))
-                .claim("type", REFRESH_TOKEN_TYPE)
-                .build();
-
-        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-    }
-
-    private void addOptionalClaim(JwtClaimsSet.Builder builder, String key, String value) {
-        if (value != null && !value.isBlank()) {
-            builder.claim(key, value);
+            log.info("✅ Sent PatientCreatedEvent for patient: {}", fullName);
+        } catch (Exception e) {
+            log.error("❌ Failed to publish PatientCreatedEvent for {}", user.getMatricule(), e);
         }
     }
 
-    // ==================== PRIVATE HELPERS - QUERIES ====================
-
-    private UserAccount findUserByMatricule(String matricule) {
-        return userRepository.findByMatricule(matricule)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-    }
-
-    // ==================== PRIVATE HELPERS - UTILITY ====================
-
-    private Set<Role> filterEmployeeRoles(Set<Role> requestedRoles) {
-        Set<Role> employeeRoles = requestedRoles.stream()
-                .filter(role -> role != Role.PATIENT)
-                .collect(Collectors.toSet());
-                
-        if (employeeRoles.isEmpty()) {
-            throw new IllegalArgumentException("At least one non-patient role is required");
-        }
-        
-        return employeeRoles;
-    }
-
-    private boolean hasEmployeeRole(UserAccount user) {
-        return user.getRoles() != null && 
-               user.getRoles().stream().anyMatch(role -> role != Role.PATIENT);
-    }
-
-    private boolean hasPatientRole(UserAccount user) {
-        return user.getRoles() != null && user.getRoles().contains(Role.PATIENT);
-    }
-
-    private Set<String> extractRoleNames(UserAccount user) {
-        return user.getRoles() == null 
-                ? Collections.emptySet()
-                : user.getRoles().stream().map(Enum::name).collect(Collectors.toSet());
-    }
-
-    private String determineDashboardRoute(UserAccount user) {
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            return dashboardService.getDashboardRoute(Role.PATIENT);
-        }
-        
-        Role primaryRole = user.getRoles().stream()
-                .min(this::compareRolePriority)
-                .orElse(Role.PATIENT);
-                
-        return dashboardService.getDashboardRoute(primaryRole);
-    }
-
-    private int compareRolePriority(Role r1, Role r2) {
-        return Integer.compare(getRolePriority(r1), getRolePriority(r2));
-    }
-
-    private int getRolePriority(Role role) {
-        return switch (role) {
-            case ADMIN -> 1;
-            case HR -> 2;
-            case DOCTOR -> 3;
-            case NURSE -> 4;
-            case RECEPTIONIST -> 5;
-            case SUPERVISOR, OBSERVATOR -> 6;
-            case PATIENT -> 7;
-        };
-    }
-
-    private String defaultIfNull(String value, String defaultValue) {
-        return value != null ? value : defaultValue;
-    }
-
-    // ==================== EVENT PUBLISHING ====================
 
     private void publishEmployeeCreatedEvent(UserAccount user, RegisterRequest request) {
         Set<String> roleNames = extractRoleNames(user);
@@ -439,6 +317,121 @@ public class AuthService {
         );
 
         rabbitTemplate.convertAndSend(RabbitConfig.EMPLOYEE_CREATED_QUEUE, event);
-        log.debug("Published EmployeeCreatedEvent for matricule: {}", user.getMatricule());
+        log.debug("📤 Published EmployeeCreatedEvent for matricule: {}", user.getMatricule());
+    }
+
+    // ==================== UTILITIES ====================
+
+    private UserAccount findUserByMatricule(String matricule) {
+        return userRepository.findByMatricule(matricule)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    private void validateUniqueCredentials(String matricule, String email) {
+        if (matricule != null && userRepository.existsByMatricule(matricule)) {
+            throw new IllegalArgumentException("Matricule already in use");
+        }
+        if (email != null && userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+    }
+
+    private void validateNotNull(Object obj, String name) {
+        if (obj == null) throw new IllegalArgumentException(name + " cannot be null");
+    }
+
+    private void validateNotBlank(String value, String name) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(name + " cannot be blank");
+        }
+    }
+
+    private Set<Role> filterEmployeeRoles(Set<Role> requestedRoles) {
+        return requestedRoles.stream()
+                .filter(role -> role != Role.PATIENT)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> extractRoleNames(UserAccount user) {
+        return user.getRoles() == null
+                ? Collections.emptySet()
+                : user.getRoles().stream().map(Enum::name).collect(Collectors.toSet());
+    }
+
+    private String defaultIfNull(String value, String def) {
+        return value != null ? value : def;
+    }
+
+    private void validateEmployeeRequest(RegisterRequest request) {
+        if (request.roles() == null || request.roles().isEmpty()) {
+            throw new IllegalArgumentException("Employee must have at least one role");
+        }
+        if (request.roles().contains(Role.PATIENT)) {
+            throw new IllegalArgumentException("Employees cannot have PATIENT role");
+        }
+    }
+
+    private void validateEmployeeCredentials(UserAccount user, String password) {
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+    }
+
+    private void validatePatientCredentials(UserAccount user, String password) {
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+    }
+
+    private AuthResponse buildAuthResponse(UserAccount user) {
+        Instant now = Instant.now();
+        Set<String> roleNames = extractRoleNames(user);
+
+        String accessToken = generateAccessToken(user, roleNames, now);
+        String refreshToken = generateRefreshToken(user, now);
+        String dashboardRoute = dashboardService.getDashboardRoute(user.getRoles().iterator().next());
+
+        return new AuthResponse(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                user.getId(),
+                user.getMatricule(),
+                user.getEmail(),
+                user.getCIN(),
+                user.getRoles(),
+                dashboardRoute,
+                user.getFirstName(),
+                user.getLastName(),
+                user.getCIN(),
+                user.getdateNaissance(),
+                user.getnumeroTelephone(),
+                user.getadresse(),
+                user.getnumeroSecuriteSociale(),
+                user.getCIN(),
+                user.isMinor()
+        );
+    }
+
+    private String generateAccessToken(UserAccount user, Set<String> roles, Instant now) {
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer(TOKEN_ISSUER)
+                .issuedAt(now)
+                .expiresAt(now.plus(ACCESS_TOKEN_MINUTES, ChronoUnit.MINUTES))
+                .subject(user.getMatricule())
+                .claim("roles", roles)
+                .build();
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+
+    private String generateRefreshToken(UserAccount user, Instant now) {
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer(TOKEN_ISSUER)
+                .issuedAt(now)
+                .expiresAt(now.plus(REFRESH_TOKEN_DAYS, ChronoUnit.DAYS))
+                .subject(user.getMatricule())
+                .claim("type", REFRESH_TOKEN_TYPE)
+                .build();
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 }

@@ -23,6 +23,29 @@ services:
       retries: 10
       start_period: 30s
 
+  mysql-patient:
+    image: mysql:8.0
+    container_name: mysql-patient
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: patientdb
+      MYSQL_USER: AmDee
+      MYSQL_PASSWORD: AmDee
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3309:3306"
+    volumes:
+     - mysql_patient_data:/var/lib/mysql
+    networks:
+     - hospital-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+
   mysql-employee:
     image: mysql:8.0
     container_name: mysql-employee
@@ -42,7 +65,7 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
       interval: 10s
       timeout: 10s
-      retries: 10
+      retries: 3
       start_period: 30s
 
   rabbitmq:
@@ -91,36 +114,34 @@ services:
       retries: 5
       start_period: 60s
 
-  #patient-service:
-  #  build:
-  #    context: .
-  #    dockerfile: patient-service/Dockerfile.patient-service
-  #  container_name: patient-service
-  #  environment:
-  #    SPRING_PROFILES_ACTIVE: docker
-  #    SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
-  #    SPRING_RABBITMQ_HOST: rabbitmq
-  #    SPRING_RABBITMQ_PORT: 5672
-  #    SPRING_RABBITMQ_USERNAME: admin
-  #    SPRING_RABBITMQ_PASSWORD: admin123
-  #  ports:
-  #    - "8081:8081"
-  #  depends_on:
-  #    auth-service:
-  #      condition: service_healthy
-  #    rabbitmq:
-  #      condition: service_healthy
-  #  networks:
-  #    - hospital-network
-  #  volumes:
-  #    - patient_data:/app/data
-  #  restart: unless-stopped
-  #  healthcheck:
-  #    test: ["CMD", "curl", "-f", "http://localhost:8081/patient-service/actuator/health"]
-  #    interval: 30s
-  #    timeout: 10s
-  #    retries: 5
-  #    start_period: 60s
+  patient-service:
+    build:
+      context: .
+      dockerfile: patient-service/Dockerfile.patient-service
+    container_name: patient-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      AUTH_SERVICE_URL: http://auth-service:8083/auth-service
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-patient:3306/patientdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: AmDee
+      SPRING_DATASOURCE_PASSWORD: AmDee
+    ports:
+      - "8081:8080"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - hospital-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/patient-service/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   employee-service:
     build:
@@ -161,8 +182,8 @@ services:
     depends_on:
       auth-service:
         condition: service_healthy
-      #patient-service:
-        #condition: service_healthy
+      patient-service:
+        condition: service_healthy
       employee-service:
         condition: service_healthy
     networks:
@@ -182,7 +203,7 @@ services:
     container_name: phpmyadmin
     environment:
       PMA_ARBITRARY: 1
-      PMA_HOSTS: mysql-auth,mysql-employee
+      PMA_HOSTS: mysql-auth,mysql-employee,mysql-patient
       PMA_USER: root
       PMA_PASSWORD: rootpass
     ports:
@@ -191,6 +212,8 @@ services:
       mysql-auth:
         condition: service_healthy
       mysql-employee:
+        condition: service_healthy
+      mysql-patient:
         condition: service_healthy
     networks:
       - hospital-network
@@ -207,5 +230,5 @@ volumes:
     driver: local
   rabbitmq_data:
     driver: local
-  #patient_data:
-    #driver: local
+  mysql_patient_data:
+    driver: local
