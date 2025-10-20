@@ -57,6 +57,12 @@ spring:
     activate:
       on-profile: docker
 
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          jwk-set-uri: http://auth-service:8083/auth-service/.well-known/jwks.json
+
   datasource:
     url: jdbc:mysql://mysql-patient:3306/patientdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver

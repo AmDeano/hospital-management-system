@@ -70,7 +70,7 @@ public class AuthService {
         UserAccount account = buildPatientAccount(request);
         userRepository.save(account);
 
-        log.info("✅ Patient registered successfully: {}", account.getMatricule());
+        log.info("✅ Patient registered successfully: {}", account.getCIN());
         publishPatientCreatedEvent(account);
     }
     private void validateUniqueCIN(String cin) {

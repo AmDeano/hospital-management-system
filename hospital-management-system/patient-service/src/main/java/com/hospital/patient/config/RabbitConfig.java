@@ -13,14 +13,14 @@ public class RabbitConfig {
     public static final String PATIENT_QUEUE = "patient.events.queue";
     public static final String EXCHANGE_NAME = "hospital.exchange";
     public static final String PATIENT_ROUTING_KEY = "patient.events";
-    
+
     @Bean
     public Queue patientQueue() {
         return QueueBuilder.durable(PATIENT_QUEUE).build();
     }
 
     @Bean
-    public DirectExchange patientExchange() {
+    public DirectExchange hospitalExchange() {
         return new DirectExchange(EXCHANGE_NAME);
     }
 
@@ -28,7 +28,7 @@ public class RabbitConfig {
     public Binding patientBinding() {
         return BindingBuilder
                 .bind(patientQueue())
-                .to(patientExchange())
+                .to(hospitalExchange())
                 .with(PATIENT_ROUTING_KEY);
     }
 
@@ -43,13 +43,4 @@ public class RabbitConfig {
         template.setMessageConverter(jsonMessageConverter());
         return template;
     }
-    
-    @Bean
-    public DirectExchange hospitalExchange() {
-        return new DirectExchange("hospital.exchange");
-    }
 }
-
-
-
-    
