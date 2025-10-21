@@ -1,8 +1,9 @@
 # Eclipse
 .metadata/
-.settings/
 .classpath
 .project
+**/.settings/
+**/.factorypath
 
 # Maven
 target/

@@ -1,0 +1,21 @@
+<!-- src/app/auth/register/register.component.html -->
+<div class="container mt-5">
+  <h2>Register</h2>
+  <form (ngSubmit)="onSubmit()">
+    <div>
+      <label>Username</label>
+      <input [(ngModel)]="username" name="username" required class="form-control">
+    </div>
+    <div>
+      <label>Email</label>
+      <input [(ngModel)]="email" name="email" type="email" required class="form-control">
+    </div>
+    <div>
+      <label>Password</label>
+      <input [(ngModel)]="password" name="password" type="password" required class="form-control">
+    </div>
+    <button class="btn btn-success mt-3">Register</button>
+    <p class="text-success">{{ success }}</p>
+    <p class="text-danger">{{ error }}</p>
+  </form>
+</div>

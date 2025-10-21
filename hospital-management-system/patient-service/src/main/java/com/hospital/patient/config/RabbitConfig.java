@@ -10,10 +10,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
 
-    // Queue names
-    public static final String PATIENT_QUEUE = "patient.queue";
-    public static final String PATIENT_EXCHANGE = "patient.exchange";
-    public static final String PATIENT_ROUTING_KEY = "patient.created";
+    public static final String PATIENT_QUEUE = "patient.events.queue";
+    public static final String EXCHANGE_NAME = "hospital.exchange";
+    public static final String PATIENT_ROUTING_KEY = "patient.events";
 
     @Bean
     public Queue patientQueue() {
@@ -21,15 +20,15 @@ public class RabbitConfig {
     }
 
     @Bean
-    public TopicExchange patientExchange() {
-        return new TopicExchange(PATIENT_EXCHANGE);
+    public DirectExchange hospitalExchange() {
+        return new DirectExchange(EXCHANGE_NAME);
     }
 
     @Bean
     public Binding patientBinding() {
         return BindingBuilder
                 .bind(patientQueue())
-                .to(patientExchange())
+                .to(hospitalExchange())
                 .with(PATIENT_ROUTING_KEY);
     }
 

@@ -1,0 +1,111 @@
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: AmDee
+    password: AmDee
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  rabbitmq:   # ✅ must be under spring
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+
+
+server:
+  port: 8083
+  servlet:
+    context-path: /auth-service
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.hospital.auth: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web: DEBUG
+    root: INFO
+
+# JWT Configuration
+jwt:
+  expiration: 900000  # 15 minutes in milliseconds
+  refresh-expiration: 604800000  # 7 days in milliseconds
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:mysql://mysql-auth:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: AmDee
+    password: AmDee
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  rabbitmq:   # ✅ must be under spring
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin123
+
+server:
+  port: 8083
+
+logging:
+  level:
+    com.hospital.auth: INFO
+    org.springframework.security: INFO
+    root: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:mysql://mysql-auth:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: AmDee
+    password: AmDee
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  rabbitmq:   # ✅ must be under spring
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin123
+server:
+  port: 8083
+
+logging:
+  level:
+    com.hospital.auth: INFO
+    org.springframework.security: WARN
+    root: WARN

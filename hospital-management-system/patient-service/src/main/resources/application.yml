@@ -1,102 +1,123 @@
-server:
-  port: 8081
-  servlet:
-    context-path: /patient-service
-
 spring:
   application:
     name: patient-service
-  profiles:
-    active: default
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8083/auth-service}/.well-known/jwks.json
 
   datasource:
-    url: jdbc:h2:mem:patientdb
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3309/patientdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: AmDee
     password: AmDee
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
+        dialect: org.hibernate.dialect.MySQLDialect
 
   rabbitmq:
     host: localhost
     port: 5672
     username: admin
     password: admin123
-    virtual-host: /
+
+server:
+  port: 8081
+  servlet:
+    context-path: /patient-service
 
 management:
   endpoints:
     web:
+      base-path: /actuator
       exposure:
         include: health,info,metrics
   endpoint:
     health:
       show-details: always
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    hostname: localhost
-    prefer-ip-address: true
-
 logging:
   level:
     com.hospital.patient: DEBUG
+    org.springframework.security: INFO
     org.springframework.web: DEBUG
     root: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+# ========== DOCKER PROFILE ==========
 ---
 spring:
   config:
     activate:
       on-profile: docker
-  
+
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          jwk-set-uri: http://auth-service:8083/auth-service/.well-known/jwks.json
+
   datasource:
-    url: jdbc:h2:file:/app/data/patientdb;AUTO_SERVER=TRUE
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://mysql-patient:3306/patientdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: AmDee
     password: AmDee
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
-        trace: false
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
 
-eureka:
-  client:
-    enabled: ${EUREKA_CLIENT_ENABLED:false}
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin123
+
+server:
+  port: 8081
 
 logging:
   level:
-    com.hospital.patient: ${LOGGING_LEVEL_COM_HOSPITAL_PATIENT:INFO}
-    org.springframework.web: INFO
+    com.hospital.patient: INFO
+    org.springframework.security: INFO
     root: INFO
+
+# ========== PROD PROFILE ==========
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://mysql-patient:3306/patientdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    driver-class-name: ${DATABASE_DRIVER:com.mysql.cj.jdbc.Driver}
+    username: ${DATABASE_USERNAME:AmDee}
+    password: ${DATABASE_PASSWORD:AmDee}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin123
+
+server:
+  port: 8081
+
+logging:
+  level:
+    com.hospital.patient: INFO
+    org.springframework.security: WARN
+    root: WARN

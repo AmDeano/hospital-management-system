@@ -14,17 +14,17 @@
     <spring-cloud.version>2023.0.0</spring-cloud.version>
     <spring-amqp.version>3.0.10</spring-amqp.version>
   </properties>
+  
   <modules>
     <!-- Microservices will be added here -->
-    <module>patient-service</module>
-    <!-- <module>consultation-service</module> -->
-    <!-- <module>config-server</module> -->
-    <!-- <module>eureka-server</module> -->
-    <!-- <module>api-gateway</module> -->
-    <module>employee-service</module>
-    <!-- <module>front</module> -->
     <module>common</module>
+    <module>auth-service</module>
+    <module>employee-service</module>
+    <module>patient-service</module>
+    
+    <!-- <module>front</module> --> 
   </modules>
+  
   <dependencyManagement>
     <dependencies>
       

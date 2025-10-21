@@ -98,7 +98,7 @@ public class PatientEventPublisher {
 
     private void publishEvent(PatientEvent event) {
         rabbitTemplate.convertAndSend(
-            RabbitConfig.PATIENT_EXCHANGE,
+            RabbitConfig.EXCHANGE_NAME,
             RabbitConfig.PATIENT_ROUTING_KEY,
             event
         );

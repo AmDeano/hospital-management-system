@@ -1,39 +1,42 @@
-server:
-  port: 8082
-  servlet:
-    context-path: /employee-service
-
 spring:
   application:
     name: employee-service
-  profiles:
-    active: default
-  
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8083/auth-service}/.well-known/jwks.json
+
   datasource:
-    url: jdbc:h2:mem:employeedb
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3308/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: AmDee
     password: AmDee
 
   jpa:
     hibernate:
-      ddl-auto: update # use 'create-drop' for fresh db on each run
-    show-sql: true
-    database-platform: org.hibernate.dialect.H2Dialect
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true  # Allow access from other containers
+  rabbitmq:   # ✅ must be under spring
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+
+server:
+  port: 8082
+  servlet:
+    context-path: /employee-service
 
 management:
   endpoints:
     web:
+      base-path: /actuator
       exposure:
         include: health,info,metrics
   endpoint:
@@ -43,45 +46,71 @@ management:
 logging:
   level:
     com.hospital.employee: DEBUG
+    org.springframework.security: INFO
     org.springframework.web: DEBUG
     root: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
+# ========== DOCKER PROFILE ==========
 ---
 spring:
   config:
     activate:
       on-profile: docker
-  
-  datasource:
-    # Use file-based H2 for persistence in Docker
-    url: jdbc:h2:file:/app/data/employeedb;AUTO_SERVER=TRUE
-    driver-class-name: org.h2.Driver
-    username: Amdee
-    password: AmDee
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
-        trace: false
+  datasource:
+    url: jdbc:mysql://mysql-employee:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: AmDee
+    password: AmDee
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
 
-  rabbitmq:
-    host: localhost
+  rabbitmq:   # ✅ must be under spring
+    host: rabbitmq
     port: 5672
     username: admin
     password: admin123
-    virtual-host: /	
+server:
+  port: 8082
+
 logging:
   level:
-    com.hospital.employee: ${LOGGING_LEVEL_COM_HOSPITAL_EMPLOYEE:INFO}
-    org.springframework.web: INFO
+    com.hospital.employee: INFO
+    org.springframework.security: INFO
     root: INFO
+
+# ========== PROD PROFILE ==========
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://mysql-employee:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    driver-class-name: ${DATABASE_DRIVER:com.mysql.cj.jdbc.Driver}
+    username: ${DATABASE_USERNAME:AmDee}
+    password: ${DATABASE_PASSWORD:AmDee}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  rabbitmq:   # ✅ must be under spring
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin123
+
+server:
+  port: 8082
+
+logging:
+  level:
+    com.hospital.employee: INFO
+    org.springframework.security: WARN
+    root: WARN
