@@ -137,7 +137,7 @@ services:
       - hospital-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/patient-service/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
