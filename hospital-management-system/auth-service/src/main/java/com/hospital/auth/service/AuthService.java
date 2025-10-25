@@ -273,22 +273,37 @@ public class AuthService {
 
     private void publishPatientCreatedEvent(UserAccount user) {
         try {
-            String fullName = (user.getFirstName() != null ? user.getFirstName() : "") + " " +
-                              (user.getLastName() != null ? user.getLastName() : "");
+            String fullName = buildFullName(user.getFirstName(), user.getLastName());
 
             patientEventPublisher.publishPatientCreatedEvent(
                     user.getId().toString(),
-                    fullName.trim(),
+                    fullName,
                     user.getEmail(),
                     user.getCIN(),
+                    user.getdateNaissance(),
                     user.isMinor(),
-                    user.getparentCin()
+                    user.getparentCin(),
+                    user.getnumeroTelephone(),
+                    user.getadresse(),
+                    user.getnumeroSecuriteSociale()
             );
 
-            log.info("✅ Sent PatientCreatedEvent for patient: {}", fullName);
+            log.info("✅ Sent PatientCreatedEvent for patient: {} (CIN: {})", fullName, user.getCIN());
         } catch (Exception e) {
             log.error("❌ Failed to publish PatientCreatedEvent for {}", user.getMatricule(), e);
+            // Don't throw - allow registration to complete even if event fails
         }
+    }
+
+    /**
+     * Build full name from first and last names, handling nulls
+     */
+    private String buildFullName(String firstName, String lastName) {
+        String first = (firstName != null && !firstName.isBlank()) ? firstName.trim() : "";
+        String last = (lastName != null && !lastName.isBlank()) ? lastName.trim() : "";
+        
+        String fullName = (first + " " + last).trim();
+        return fullName.isEmpty() ? "Unknown Patient" : fullName;
     }
 
 

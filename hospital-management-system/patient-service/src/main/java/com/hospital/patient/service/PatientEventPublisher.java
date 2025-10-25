@@ -8,6 +8,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class PatientEventPublisher {
 
@@ -26,10 +28,10 @@ public class PatientEventPublisher {
             event.setEventData("New patient registered in the system");
             
             publishEvent(event);
-            logger.info("Published patient created event: {}", event);
+            logger.info("✅ Published patient created event: {}", event);
         } catch (Exception e) {
-            logger.error("Error publishing patient created event", e);
-            throw e; // Re-throw to allow caller to handle
+            logger.error("❌ Error publishing patient created event", e);
+            throw e;
         }
     }
 
@@ -43,9 +45,9 @@ public class PatientEventPublisher {
             event.setEventData(updateDetails);
             
             publishEvent(event);
-            logger.info("Published patient updated event: {}", event);
+            logger.info("✅ Published patient updated event: {}", event);
         } catch (Exception e) {
-            logger.error("Error publishing patient updated event", e);
+            logger.error("❌ Error publishing patient updated event", e);
             throw e;
         }
     }
@@ -60,9 +62,9 @@ public class PatientEventPublisher {
             event.setEventData("Patient removed from the system");
             
             publishEvent(event);
-            logger.info("Published patient deleted event: {}", event);
+            logger.info("✅ Published patient deleted event: {}", event);
         } catch (Exception e) {
-            logger.error("Error publishing patient deleted event", e);
+            logger.error("❌ Error publishing patient deleted event", e);
             throw e;
         }
     }
@@ -78,9 +80,9 @@ public class PatientEventPublisher {
                                             isNowMinor ? "minor" : "adult"));
             
             publishEvent(event);
-            logger.info("Published patient status changed event: {}", event);
+            logger.info("✅ Published patient status changed event: {}", event);
         } catch (Exception e) {
-            logger.error("Error publishing patient status changed event", e);
+            logger.error("❌ Error publishing patient status changed event", e);
             throw e;
         }
     }
@@ -92,7 +94,7 @@ public class PatientEventPublisher {
         event.setPatientId(patientId);
         event.setPatientName(patientName);
         event.setPatientEmail(patientEmail);
-        event.setTimestamp(java.time.LocalDateTime.now());
+        event.setTimestamp(LocalDateTime.now().toString()); // Changed to String
         return event;
     }
 
