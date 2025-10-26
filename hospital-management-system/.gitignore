@@ -1,1 +1,21 @@
+# Eclipse
 .metadata/
+.classpath
+.project
+**/.settings/
+**/.factorypath
+
+# Maven
+target/
+
+# Logs
+*.log
+
+# Node (Angular)
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
