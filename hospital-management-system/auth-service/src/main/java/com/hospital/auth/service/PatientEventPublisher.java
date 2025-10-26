@@ -40,7 +40,7 @@ public class PatientEventPublisher {
                     .patientEmail(patientEmail)
                     .patientCin(sanitize(patientCin))
                     .dateNaissance(dateNaissance != null ? dateNaissance.toString() : null)
-                    .isMinor(isMinor != null ? isMinor : false)
+                    .isMinor(isMinor != null ? isMinor : calculateIsMinor(dateNaissance))
                     .parentCin(sanitize(parentCin))
                     .numeroTelephone(sanitize(numeroTelephone))
                     .adresse(sanitize(adresse))
@@ -64,7 +64,13 @@ public class PatientEventPublisher {
             throw new RuntimeException("Failed to publish patient created event", e);
         }
     }
+    private Boolean calculateIsMinor(LocalDate birthDate) {
+        if (birthDate == null) return false;
+        int age = java.time.Period.between(birthDate, java.time.LocalDate.now()).getYears();
+        return age < 18;
+    }
 
+    
     public void publishPatientUpdatedEvent(
             String patientId,
             String patientName,

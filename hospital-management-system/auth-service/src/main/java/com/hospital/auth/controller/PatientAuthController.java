@@ -3,6 +3,7 @@ package com.hospital.auth.controller;
 
 import com.hospital.auth.dto.AuthResponse;
 import com.hospital.auth.dto.LoginRequest;
+import com.hospital.auth.dto.LoginRequestEmail;
 import com.hospital.auth.dto.PatientRegisterRequest;
 import com.hospital.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -32,7 +33,7 @@ public class PatientAuthController {
      * Patient login - Separate from employee login
      */
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody @Valid LoginRequest req) {
+    public AuthResponse login(@RequestBody @Valid LoginRequestEmail req) {
         return authService.loginPatient(req);
     }
 }

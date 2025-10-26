@@ -128,13 +128,24 @@ public class AuthService {
         return buildAuthResponse(user);
     }
 
-    public AuthResponse loginPatient(LoginRequest request) {
+    public AuthResponse loginPatient(LoginRequestEmail request) {
         validateNotNull(request, "Login request");
 
-        UserAccount user = findUserByMatricule(request.matricule());
-        validatePatientCredentials(user, request.password());
+     // 🔍 Find patient by email
+        UserAccount user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + request.email()));
 
-        log.info("Patient logged in: {}", user.getMatricule());
+     // Check if account has patient role
+        if (user.getRoles().stream().noneMatch(r -> r == Role.PATIENT)) {
+            throw new IllegalArgumentException("User is not a patient account");
+        }
+
+        // 🔐 Validate password
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+        
+        log.info("Patient logged in: {}", user.getEmail());
         return buildAuthResponse(user);
     }
     
