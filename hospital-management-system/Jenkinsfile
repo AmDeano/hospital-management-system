@@ -1,0 +1,125 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK17'
+        maven 'Maven'
+        nodejs 'NodeJS18'
+    }
+
+    environment {
+        JAVA_HOME = tool('JDK17')
+        PATH = "${JAVA_HOME}/bin:${env.PATH}"
+        DOCKERHUB_CREDENTIALS = 'DockerHub' // Jenkins credentials ID for DockerHub (username/password)
+        DOCKERHUB_NAMESPACE = 'amdea' // replace with your DockerHub username
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                dir('hospital-management-system') {
+                    sh 'mvn clean install -DskipTests'
+                }
+            }
+        }
+
+        stage ('SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId : 'sonar-token', variable :'SONAR_TOKEN')]) {
+                    dir('hospital-management-system') {
+                        sh """
+                        mvn clean verify sonar:sonar \
+                          -Dsonar.projectKey=Hospital \
+                          -Dsonar.projectName='Hospital' \
+                          -Dsonar.host.url=http://localhost:9000 \
+                          -Dsonar.token=$SONAR_TOKEN
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Install Frontend Dependencies') {
+            steps {
+                dir('hospital-management-system/Front/front/employee-front') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir('hospital-management-system/Front/front/employee-front') {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                dir('hospital-management-system') {
+                    sh 'docker compose -f docker-compose.yml build'
+                }
+            }
+        }
+
+        stage('Tag & Push Docker Images') {
+            steps {
+                dir('hospital-management-system') {
+                    script {
+                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
+                            // Tag and push each service
+                            sh """
+                            docker tag employee-service \$DOCKERHUB_NAMESPACE/employee-service:latest
+                            docker push \$DOCKERHUB_NAMESPACE/employee-service:latest
+
+                            docker tag patient-service \$DOCKERHUB_NAMESPACE/patient-service:latest
+                            docker push \$DOCKERHUB_NAMESPACE/patient-service:latest
+
+                            docker tag employee-frontend \$DOCKERHUB_NAMESPACE/employee-frontend:latest
+                            docker push \$DOCKERHUB_NAMESPACE/employee-frontend:latest
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Run Docker Containers') {
+            steps {
+                dir('hospital-management-system') {
+                    sh 'docker compose -f docker-compose.yml up -d'
+                }
+            }
+        }
+
+        stage('Check Running Containers') {
+            steps {
+                dir('hospital-management-system') {
+                    sh 'docker ps'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "🧹 Cleaning up Docker containers..."
+            dir('hospital-management-system') {
+                sh 'docker compose -f docker-compose.yml down'
+            }
+        }
+        success {
+            echo '✅ Build and deployment succeeded!'
+        }
+        failure {
+            echo '❌ Build failed!'
+        }
+    }
+}

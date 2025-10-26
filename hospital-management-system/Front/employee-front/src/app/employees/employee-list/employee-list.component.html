@@ -1,0 +1,141 @@
+<!-- src/app/employees/employee-list/employee-list.component.html -->
+<div class="employee-list-container">
+  <div class="header">
+    <h2>Employee Management</h2>
+    <a routerLink="/employees/add" class="btn btn-primary">Add New Employee</a>
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="basic-search">
+      <input 
+        type="text" 
+        [(ngModel)]="searchCriteria.nom" 
+        placeholder="Search by name..."
+        class="search-input">
+  <!--     
+      <input 
+        type="text" 
+        [(ngModel)]="searchCriteria.matricule" 
+        placeholder="Search by matricule..."
+        class="search-input">
+ -->
+      <button (click)="searchEmployees()" class="btn btn-search">Search</button>
+      <button (click)="clearSearch()" class="btn btn-secondary">Clear</button>
+      <button (click)="showAdvancedSearch = !showAdvancedSearch" class="btn btn-link">
+        {{ showAdvancedSearch ? 'Hide' : 'Show' }} Advanced Search
+      </button>
+    </div>
+
+    <!-- Advanced Search -->
+    <div *ngIf="showAdvancedSearch" class="advanced-search">
+      <div class="search-row">
+        <select [(ngModel)]="searchCriteria.employeeType" class="search-select">
+          <option value="">All Employee Types</option>
+          <option value="MEDICAL_STAFF">Medical Staff</option>
+          <option value="ADMINISTRATION">Administration</option>
+        </select>
+
+        <input 
+          type="text" 
+          [(ngModel)]="searchCriteria.departement" 
+          placeholder="Department..."
+          class="search-input">
+<!-- 
+        <input 
+          type="text" 
+          [(ngModel)]="searchCriteria.poste" 
+          placeholder="Position..."
+          class="search-input">
+      </div>
+
+      <div class="search-row">
+        <input 
+          type="email" 
+          [(ngModel)]="searchCriteria.email" 
+          placeholder="Email..."
+          class="search-input">
+
+        <input 
+          type="tel" 
+          [(ngModel)]="searchCriteria.telephone" 
+          placeholder="Phone..."
+          class="search-input">
+ -->
+        <select [(ngModel)]="searchCriteria.isActive" class="search-select">
+          <option value="">All Status</option>
+          <option [value]="true">Active</option>
+          <option [value]="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading and Error Messages -->
+  <div *ngIf="loading" class="loading">Loading employees...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <!-- Employee Table -->
+  <div *ngIf="!loading && !error" class="table-container">
+    <table class="employee-table">
+      <thead>
+        <tr>
+          <th>Matricule</th>
+          <th>Full Name</th>
+          <th>Type</th>
+          <th>Position</th>
+          <th>Department</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Hire Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let emp of employees" [class.inactive]="!emp.isActive">
+          <td>{{ emp.matricule }}</td>
+          <td>{{ emp.nom }} {{ emp.prenom }}</td>
+          <td>
+            <span class="employee-type" [class.medical]="emp.employeeType === 'MEDICAL_STAFF'">
+              {{ getEmployeeTypeDisplay(emp.employeeType) }}
+            </span>
+          </td>
+          <td>{{ emp.poste }}</td>
+          <td>{{ emp.departement || '-' }}</td>
+          <td>{{ emp.email || '-' }}</td>
+          <td>{{ emp.telephone || '-' }}</td>
+          <td>{{ formatDate(emp.dateEmbauche) }}</td>
+          <td>
+            <span class="status" [class.active]="emp.isActive" [class.inactive]="!emp.isActive">
+              {{ emp.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td class="actions">
+            <button 
+              (click)="toggleEmployeeStatus(emp)" 
+              class="btn btn-sm"
+              [class.btn-warning]="emp.isActive"
+              [class.btn-success]="!emp.isActive">
+              {{ emp.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+            <button 
+              [routerLink]="['/employees/edit', emp.matricule]"
+              class="btn btn-sm btn-info">
+              Edit
+            </button>
+            <button 
+              (click)="deleteEmployee(emp.matricule)" 
+              class="btn btn-sm btn-danger">
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="employees.length === 0" class="no-data">
+      No employees found.
+    </div>
+  </div>
+</div>
