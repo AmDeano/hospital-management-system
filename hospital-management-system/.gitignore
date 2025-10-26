@@ -7,6 +7,7 @@
 
 # Maven
 target/
+**/.target/
 
 # Logs
 *.log
