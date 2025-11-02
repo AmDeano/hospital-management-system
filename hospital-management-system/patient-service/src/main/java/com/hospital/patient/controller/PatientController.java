@@ -22,7 +22,7 @@ public class PatientController {
     
     // ✅ Get all patients or search by name
     @GetMapping
-    public ResponseEntity<List<PatientDto>> getPatients(@RequestParam(required = false) String name) {
+    public ResponseEntity<List<PatientDto>> getPatients(@RequestParam(name = "name", required = false) String name) {
         if (name != null && !name.isEmpty()) {
             return ResponseEntity.ok(patientService.searchPatientsByName(name));
         }
@@ -64,12 +64,4 @@ public class PatientController {
         patientService.deletePatient(id);
         return ResponseEntity.noContent().build();
     }
-    
-    // Search patients by name
-    @GetMapping
-    public ResponseEntity<List<PatientDto>> searchPatientsByName(@RequestParam(required = false) String name) {
-        List<PatientDto> patients = patientService.searchPatientsByName(name);
-        return ResponseEntity.ok(patients);
-    }
-
 }
