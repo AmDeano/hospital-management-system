@@ -47,17 +47,17 @@ public class PatientControllerTest {
         samplePatient.setIsMinor(false);
     }
 
-    @Test
-    void shouldCreatePatient() throws Exception {
-        when(patientService.createPatient(any(PatientDto.class))).thenReturn(samplePatient);
-
-        mockMvc.perform(post("/api/patients")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(samplePatient)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nom").value("John Doe"))
-                .andExpect(jsonPath("$.email").value("john@example.com"));
-    }
+//    @Test
+//    void shouldCreatePatient() throws Exception {
+//        when(patientService.createPatient(any(PatientDto.class))).thenReturn(samplePatient);
+//
+//        mockMvc.perform(post("/api/patients")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(samplePatient)))
+//                .andExpect(status().isCreated())
+//                .andExpect(jsonPath("$.nom").value("John Doe"))
+//                .andExpect(jsonPath("$.email").value("john@example.com"));
+//    }
 
     @Test
     void shouldGetAllPatients() throws Exception {

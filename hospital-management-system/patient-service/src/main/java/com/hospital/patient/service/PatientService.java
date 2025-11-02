@@ -1,6 +1,6 @@
 package com.hospital.patient.service;
 
-import com.hospital.common.events.PatientEvent;
+
 import com.hospital.patient.dto.PatientDto;
 import com.hospital.patient.entity.Patient;
 import com.hospital.patient.exception.PatientNotFoundException;
@@ -35,48 +35,48 @@ public class PatientService {
     @Autowired
     private PatientEventPublisher patientEventPublisher; // ✅ fixed: using correct publisher
 
-    // -----------------------------------------------------------
-    // CREATE
-    // -----------------------------------------------------------
-    public PatientDto createPatient(PatientDto patientDto) {
-        logger.info("Creating new patient: {}", patientDto.getNom());
-
-        validatePatientData(patientDto);
-
-        // Check for duplicates
-        if (patientRepository.existsByEmail(patientDto.getEmail())) {
-            throw new DuplicatePatientException("Patient with email " + patientDto.getEmail() + " already exists");
-        }
-        if (patientRepository.existsByCin(patientDto.getCin())) {
-            throw new DuplicatePatientException("Patient with CIN " + patientDto.getCin() + " already exists");
-        }
-
-        // Convert DTO to entity
-        Patient patient = convertToEntity(patientDto);
-
-        // Generate ID based on CIN or minor status
-        generatePatientId(patient);
-
-        Patient savedPatient = patientRepository.save(patient);
-        PatientDto result = convertToDto(savedPatient);
-
-        // ✅ Publish event for synchronization
-        try {
-            patientEventPublisher.publishPatientCreated(
-                savedPatient.getId(),
-                savedPatient.getNom(),
-                savedPatient.getEmail(),
-                savedPatient.getCin(),
-                savedPatient.getIsMinor(),
-                savedPatient.getParentCin()
-            );
-            logger.info("✅ Patient created event published for ID: {}", savedPatient.getId());
-        } catch (Exception e) {
-            logger.error("⚠️ Failed to publish patient created event for ID: {}", savedPatient.getId(), e);
-        }
-
-        return result;
-    }
+//    // -----------------------------------------------------------
+//    // CREATE
+//    // -----------------------------------------------------------
+//    public PatientDto createPatient(PatientDto patientDto) {
+//        logger.info("Creating new patient: {}", patientDto.getNom());
+//
+//        validatePatientData(patientDto);
+//
+//        // Check for duplicates
+//        if (patientRepository.existsByEmail(patientDto.getEmail())) {
+//            throw new DuplicatePatientException("Patient with email " + patientDto.getEmail() + " already exists");
+//        }
+//        if (patientRepository.existsByCin(patientDto.getCin())) {
+//            throw new DuplicatePatientException("Patient with CIN " + patientDto.getCin() + " already exists");
+//        }
+//
+//        // Convert DTO to entity
+//        Patient patient = convertToEntity(patientDto);
+//
+//        // Generate ID based on CIN or minor status
+//        generatePatientId(patient);
+//
+//        Patient savedPatient = patientRepository.save(patient);
+//        PatientDto result = convertToDto(savedPatient);
+//
+//        // ✅ Publish event for synchronization
+//        try {
+//            patientEventPublisher.publishPatientCreated(
+//                savedPatient.getId(),
+//                savedPatient.getNom(),
+//                savedPatient.getEmail(),
+//                savedPatient.getCin(),
+//                savedPatient.getIsMinor(),
+//                savedPatient.getParentCin()
+//            );
+//            logger.info("✅ Patient created event published for ID: {}", savedPatient.getId());
+//        } catch (Exception e) {
+//            logger.error("⚠️ Failed to publish patient created event for ID: {}", savedPatient.getId(), e);
+//        }
+//
+//        return result;
+//    }
 
     // -----------------------------------------------------------
     // READ

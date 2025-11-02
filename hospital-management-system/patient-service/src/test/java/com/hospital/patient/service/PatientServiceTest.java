@@ -51,60 +51,60 @@ public class PatientServiceTest {
         minorDto.setIsMinor(true);
     }
 
-    @Test
-    void createPatient_successfulAdult() {
-        when(patientRepository.existsByEmail(adultDto.getEmail())).thenReturn(false);
-        when(patientRepository.existsByNumeroSecuriteSociale(adultDto.getNumeroSecuriteSociale())).thenReturn(false);
-        when(patientRepository.existsByCin(adultDto.getCin())).thenReturn(false);
-        when(patientRepository.save(any(Patient.class))).thenAnswer(i -> {
-            Patient p = i.getArgument(0);
-            p.setId(p.getCin());
-            return p;
-        });
+//    @Test
+//    void createPatient_successfulAdult() {
+//        when(patientRepository.existsByEmail(adultDto.getEmail())).thenReturn(false);
+//        when(patientRepository.existsByNumeroSecuriteSociale(adultDto.getNumeroSecuriteSociale())).thenReturn(false);
+//        when(patientRepository.existsByCin(adultDto.getCin())).thenReturn(false);
+//        when(patientRepository.save(any(Patient.class))).thenAnswer(i -> {
+//            Patient p = i.getArgument(0);
+//            p.setId(p.getCin());
+//            return p;
+//        });
+//
+//        PatientDto saved = patientService.createPatient(adultDto);
+//
+//        assertNotNull(saved);
+//        assertEquals("CIN12345", saved.getId());
+//        verify(patientRepository).save(any(Patient.class));
+//    }
 
-        PatientDto saved = patientService.createPatient(adultDto);
+//    @Test
+//    void createPatient_successfulMinor() {
+//        when(patientRepository.existsByEmail(minorDto.getEmail())).thenReturn(false);
+//        when(patientRepository.existsByNumeroSecuriteSociale(minorDto.getNumeroSecuriteSociale())).thenReturn(false);
+//        when(patientRepository.existsByCin(minorDto.getParentCin())).thenReturn(true);
+//        when(patientRepository.getNextMinorId()).thenReturn(5);
+//        when(patientRepository.save(any(Patient.class))).thenAnswer(i -> {
+//            Patient p = i.getArgument(0);
+//            p.setId("MIN-0005");
+//            return p;
+//        });
+//
+//        PatientDto saved = patientService.createPatient(minorDto);
+//
+//        assertNotNull(saved);
+//        assertTrue(saved.getId().startsWith("MIN-"));
+//        assertEquals("MIN-0005", saved.getId());
+//    }
 
-        assertNotNull(saved);
-        assertEquals("CIN12345", saved.getId());
-        verify(patientRepository).save(any(Patient.class));
-    }
-
-    @Test
-    void createPatient_successfulMinor() {
-        when(patientRepository.existsByEmail(minorDto.getEmail())).thenReturn(false);
-        when(patientRepository.existsByNumeroSecuriteSociale(minorDto.getNumeroSecuriteSociale())).thenReturn(false);
-        when(patientRepository.existsByCin(minorDto.getParentCin())).thenReturn(true);
-        when(patientRepository.getNextMinorId()).thenReturn(5);
-        when(patientRepository.save(any(Patient.class))).thenAnswer(i -> {
-            Patient p = i.getArgument(0);
-            p.setId("MIN-0005");
-            return p;
-        });
-
-        PatientDto saved = patientService.createPatient(minorDto);
-
-        assertNotNull(saved);
-        assertTrue(saved.getId().startsWith("MIN-"));
-        assertEquals("MIN-0005", saved.getId());
-    }
-
-    @Test
-    void createPatient_duplicateEmail_throwsException() {
-        when(patientRepository.existsByEmail(adultDto.getEmail())).thenReturn(true);
-        assertThrows(DuplicatePatientException.class, () -> patientService.createPatient(adultDto));
-    }
-
-    @Test
-    void createPatient_missingCINForAdult_throwsException() {
-        adultDto.setCin(null);
-        assertThrows(InvalidPatientDataException.class, () -> patientService.createPatient(adultDto));
-    }
-
-    @Test
-    void createPatient_missingParentCinForMinor_throwsException() {
-        minorDto.setParentCin(null);
-        assertThrows(InvalidPatientDataException.class, () -> patientService.createPatient(minorDto));
-    }
+//    @Test
+//    void createPatient_duplicateEmail_throwsException() {
+//        when(patientRepository.existsByEmail(adultDto.getEmail())).thenReturn(true);
+//        assertThrows(DuplicatePatientException.class, () -> patientService.createPatient(adultDto));
+//    }
+//
+//    @Test
+//    void createPatient_missingCINForAdult_throwsException() {
+//        adultDto.setCin(null);
+//        assertThrows(InvalidPatientDataException.class, () -> patientService.createPatient(adultDto));
+//    }
+//
+//    @Test
+//    void createPatient_missingParentCinForMinor_throwsException() {
+//        minorDto.setParentCin(null);
+//        assertThrows(InvalidPatientDataException.class, () -> patientService.createPatient(minorDto));
+//    }
 
     @Test
     void getPatientById_found() {
