@@ -5,10 +5,10 @@ services:
     image: mysql:8.0
     container_name: mysql-auth
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: authdb
-      MYSQL_USER: AmDee
-      MYSQL_PASSWORD: AmDee
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_AUTH_DB}
+      MYSQL_USER: ${MYSQL_AUTH_USER}
+      MYSQL_PASSWORD: ${MYSQL_AUTH_PASS}
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - "3306:3306"
@@ -17,7 +17,7 @@ services:
     networks:
       - hospital-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -27,10 +27,10 @@ services:
     image: mysql:8.0
     container_name: mysql-patient
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: patientdb
-      MYSQL_USER: AmDee
-      MYSQL_PASSWORD: AmDee
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_PATIENT_DB}
+      MYSQL_USER: ${MYSQL_PATIENT_USER}
+      MYSQL_PASSWORD: ${MYSQL_PATIENT_PASS}
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - "3309:3306"
@@ -39,21 +39,20 @@ services:
     networks:
      - hospital-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 10s
       retries: 3
       start_period: 30s
 
-
   mysql-employee:
     image: mysql:8.0
     container_name: mysql-employee
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: employeedb
-      MYSQL_USER: AmDee
-      MYSQL_PASSWORD: AmDee
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_EMPLOYEE_DB}
+      MYSQL_USER: ${MYSQL_EMPLOYEE_USER}
+      MYSQL_PASSWORD: ${MYSQL_EMPLOYEE_PASS}
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - "3308:3306"
@@ -62,7 +61,7 @@ services:
     networks:
       - hospital-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 10s
       retries: 3
@@ -72,11 +71,11 @@ services:
     image: rabbitmq:3-management
     container_name: hospital-rabbitmq
     ports:
-      - "5672:5672"    
+      - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -95,9 +94,9 @@ services:
     container_name: auth-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-auth:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: AmDee
-      SPRING_DATASOURCE_PASSWORD: AmDee
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-auth:3306/${MYSQL_AUTH_DB}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_AUTH_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_AUTH_DB_PASS}
     ports:
       - "8083:8083"
     depends_on:
@@ -106,7 +105,6 @@ services:
     networks:
       - hospital-network
     restart: unless-stopped
-    # Simple health check that should work
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/auth-service/actuator/health"]
       interval: 30s
@@ -123,9 +121,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       AUTH_SERVICE_URL: http://auth-service:8083/auth-service
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-patient:3306/patientdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: AmDee
-      SPRING_DATASOURCE_PASSWORD: AmDee
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-patient:3306/${MYSQL_PATIENT_DB}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_PATIENT_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_PATIENT_DB_PASS}
     ports:
       - "8081:8081"
     depends_on:
@@ -152,9 +150,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       AUTH_SERVICE_URL: http://auth-service:8083/auth-service
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8083/auth-service/.well-known/jwks.json
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-employee:3306/employeedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: AmDee
-      SPRING_DATASOURCE_PASSWORD: AmDee
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-employee:3306/${MYSQL_EMPLOYEE_DB}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_EMPLOYEE_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_EMPLOYEE_DB_PASS}
     ports:
       - "8082:8082"
     depends_on:
@@ -205,7 +203,7 @@ services:
       PMA_ARBITRARY: 1
       PMA_HOSTS: mysql-auth,mysql-employee,mysql-patient
       PMA_USER: root
-      PMA_PASSWORD: rootpass
+      PMA_PASSWORD: ${PHPMYADMIN_PASS}
     ports:
       - "8085:80"
     depends_on:

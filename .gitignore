@@ -12,6 +12,8 @@ target/
 # Logs
 *.log
 
+.env
+
 # Node (Angular)
 node_modules/
 dist/
@@ -51,6 +53,7 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
+.angular/
 /.angular/cache
 .sass-cache/
 /connect.lock
