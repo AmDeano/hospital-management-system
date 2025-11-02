@@ -1,68 +1,64 @@
-# Eclipse
-.metadata/
-.classpath
-.project
+# =========================
+# 🧩 Java / Maven
+# =========================
+target/
+**/.target/
+*.class
+*.jar
+*.war
+*.ear
 **/.settings/
 **/.factorypath
 
-# Maven
-target/
-**/.target/
+# =========================
+# 🧠 Eclipse / IntelliJ
+# =========================
+.metadata/
+.classpath
+.project
+.idea/
+*.iml
+*.ipr
+*.iws
 
-# Logs
-*.log
-
+# =========================
+# 🐳 Docker & Environment
+# =========================
 .env
+docker-compose.override.yml
+**/tmp/
+**/logs/
+**/log/
 
-# Node (Angular)
+# =========================
+# 🧱 Angular / Frontend
+# =========================
 node_modules/
 dist/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
-
-# Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
-
-# Node
-/node_modules
+.angular/
+.angular/cache/
 npm-debug.log
 yarn-error.log
+package-lock.json
 
-# IDEs and editors
-.idea/
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# Visual Studio Code
+# =========================
+# 🧑‍💻 VS Code
+# =========================
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.history/*
 
-# Miscellaneous
-.angular/
-/.angular/cache
-.sass-cache/
-/connect.lock
-/coverage
-/libpeerconnection.log
-testem.log
-/typings
-
-# System files
+# =========================
+# 💾 OS / Miscellaneous
+# =========================
 .DS_Store
 Thumbs.db
-
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+history/
