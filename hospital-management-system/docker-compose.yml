@@ -1,3 +1,16 @@
+# ⚠️ SECURITY WARNING: Development Environment Only
+# This docker-compose.yml exposes database and service ports publicly for development.
+# DO NOT USE THIS CONFIGURATION IN PRODUCTION.
+#
+# For production deployment:
+# 1. Remove all port mappings for databases (mysql-*, rabbitmq)
+# 2. Use internal Docker networks only
+# 3. Implement proper secrets management (Vault, AWS Secrets Manager, etc.)
+# 4. Disable PhpMyAdmin or restrict access by IP
+# 5. Use environment-specific docker-compose files
+#
+# Create docker-compose.prod.yml for production with restricted access.
+
 version: '3.9'
 
 services:

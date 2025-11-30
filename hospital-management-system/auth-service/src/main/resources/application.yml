@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: jdbc:mysql://localhost:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: AmDee
-    password: AmDee
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
@@ -18,8 +18,8 @@ spring:
   rabbitmq:   # ✅ must be under spring
     host: localhost
     port: 5672
-    username: admin
-    password: admin123
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
 
 server:
@@ -56,8 +56,8 @@ app:
   # Data Initialization - default credentials (development only)
   init:
     enabled: true
-    admin-password: ${ADMIN_PASSWORD:admin@123}
-    hr-password: ${HR_PASSWORD:hr@123}
+    admin-password: ${ADMIN_PASSWORD}
+    hr-password: ${HR_PASSWORD}
 
 ---
 spring:
@@ -67,8 +67,8 @@ spring:
 
   datasource:
     url: jdbc:mysql://mysql-auth:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: AmDee
-    password: AmDee
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
@@ -78,8 +78,8 @@ spring:
   rabbitmq:   # ✅ must be under spring
     host: rabbitmq
     port: 5672
-    username: admin
-    password: admin123
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
 server:
   port: 8083
@@ -97,8 +97,8 @@ app:
   # Data Initialization (Docker)
   init:
     enabled: true
-    admin-password: ${ADMIN_PASSWORD:admin@123}
-    hr-password: ${HR_PASSWORD:hr@123}
+    admin-password: ${ADMIN_PASSWORD}
+    hr-password: ${HR_PASSWORD}
 
 ---
 spring:
@@ -108,8 +108,8 @@ spring:
 
   datasource:
     url: jdbc:mysql://mysql-auth:3306/authdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: AmDee
-    password: AmDee
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
@@ -119,8 +119,8 @@ spring:
   rabbitmq:   # ✅ must be under spring
     host: rabbitmq
     port: 5672
-    username: admin
-    password: admin123
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 server:
   port: 8083
 
