@@ -84,8 +84,14 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.junit.vintage</groupId>
+          <artifactId>junit-vintage-engine</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
-    
+
     <!-- JUnit 5 (Jupiter) Testing -->
 	<dependency>
 	    <groupId>org.junit.jupiter</groupId>
@@ -93,14 +99,14 @@
 	    <version>5.10.1</version>
 	    <scope>test</scope>
 	</dependency>
-	
+
 	<dependency>
 	    <groupId>org.junit.jupiter</groupId>
 	    <artifactId>junit-jupiter-engine</artifactId>
 	    <version>5.10.1</version>
 	    <scope>test</scope>
 	</dependency>
-	
+
 	<!-- Parameterized Tests (Optional, but useful) -->
 	<dependency>
 	    <groupId>org.junit.jupiter</groupId>
@@ -115,19 +121,6 @@
 	    <artifactId>assertj-core</artifactId>
 	    <version>3.24.2</version>
 	    <scope>test</scope>
-	</dependency>
-	
-	<!-- Spring Boot Test Starter (enables @SpringBootTest, MockMvc, etc.) -->
-	<dependency>
-	    <groupId>org.springframework.boot</groupId>
-	    <artifactId>spring-boot-starter-test</artifactId>
-	    <scope>test</scope>
-	    <exclusions>
-	        <exclusion>
-	            <groupId>org.junit.vintage</groupId>
-	            <artifactId>junit-vintage-engine</artifactId>
-	        </exclusion>
-	    </exclusions>
 	</dependency>
 <!--
 	<dependency>

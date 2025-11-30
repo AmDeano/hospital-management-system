@@ -1,0 +1,64 @@
+<div class="nurse-list-container">
+  <h2>Nurse Management</h2>
+
+  <div class="search-section">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Shift</mat-label>
+      <input matInput [(ngModel)]="shift" placeholder="e.g., Morning, Night">
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="filterByShift()">Filter by Shift</button>
+    <button mat-raised-button (click)="loadNurses()">All Nurses</button>
+    <button mat-raised-button color="accent" (click)="loadActiveByShift()">Active in Shift</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Loading nurses...</div>
+
+  <table mat-table [dataSource]="nurses" class="nurses-table" *ngIf="!loading && nurses.length > 0">
+    <ng-container matColumnDef="matricule">
+      <th mat-header-cell *matHeaderCellDef>Matricule</th>
+      <td mat-cell *matCellDef="let element">{{ element.matricule }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="firstName">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let element">{{ element.firstName }} {{ element.lastName }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="shift">
+      <th mat-header-cell *matHeaderCellDef>Shift</th>
+      <td mat-cell *matCellDef="let element">{{ element.shift }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="isActive">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let element">
+        <span *ngIf="element.isActive" class="badge active">Active</span>
+        <span *ngIf="!element.isActive" class="badge inactive">Inactive</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <td mat-cell *matCellDef="let element">
+        <a mat-icon-button [routerLink]="['/nurses', element.id]" title="View">
+          <span matIcon>visibility</span>
+        </a>
+        <a mat-icon-button [routerLink]="['/nurses', element.id, 'edit']" title="Edit">
+          <span matIcon>edit</span>
+        </a>
+        <button mat-icon-button (click)="deleteNurse(element.id)" title="Delete">
+          <span matIcon>delete</span>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <div *ngIf="!loading && nurses.length === 0" class="no-data">No nurses found</div>
+
+  <a mat-fab [routerLink]="['/nurses/add']" class="add-button">
+    <span matIcon>add</span>
+  </a>
+</div>

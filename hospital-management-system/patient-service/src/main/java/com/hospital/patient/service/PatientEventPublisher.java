@@ -11,12 +11,18 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 @Service
-public class PatientEventPublisher {
+public class PatientEventPublisher implements IPatientEventPublisher {
 
     private static final Logger logger = LoggerFactory.getLogger(PatientEventPublisher.class);
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
+
+    /**
+     * Constructor injection for RabbitTemplate
+     */
+    public PatientEventPublisher(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     public void publishPatientCreated(String patientId, String patientName, String patientEmail, 
                                     String patientCin, Boolean isMinor, String parentCin) {

@@ -39,7 +39,6 @@ public class UserAccount {
   private String numeroTelephone;
   private String numeroSecuriteSociale;
   private String adresse;
-  private boolean isMinor;
   private String parentCin;
 
   
@@ -88,26 +87,19 @@ public class UserAccount {
     
 	public String getCIN() { return CIN; }
 	public void setCIN(String CIN) { this.CIN = CIN; }
-	
-	public LocalDate getdateNaissance() { return dateNaissance; }
-	public void setdateNaissance(LocalDate dateNaissance) { this.dateNaissance = dateNaissance; }
-	
-	public String getnumeroSecuriteSociale() { return numeroSecuriteSociale; }
-	public void setnumeroSecuriteSociale(String numeroSecuriteSociale) { this.numeroSecuriteSociale = numeroSecuriteSociale; }
-	
-	
-	public String getadresse() { return adresse; }
-	public void setadresse(String adresse) { this.adresse = adresse; }
-	
-	
-	public boolean isMinor() { return false; }
-	public void setisMinor(boolean isMinor) { this.isMinor = false ; }
-	
-	
-	public String getparentCin() { return parentCin; }
-	public void setparentCin(String parentCin) { this.parentCin = parentCin; }
-	
-	
-	public String getnumeroTelephone() { return numeroTelephone; }
-	public void setnumeroTelephone(String numeroTelephone) { this.numeroTelephone = numeroTelephone; }
+
+	public LocalDate getDateNaissance() { return dateNaissance; }
+	public void setDateNaissance(LocalDate dateNaissance) { this.dateNaissance = dateNaissance; }
+
+	public String getNumeroSecuriteSociale() { return numeroSecuriteSociale; }
+	public void setNumeroSecuriteSociale(String numeroSecuriteSociale) { this.numeroSecuriteSociale = numeroSecuriteSociale; }
+
+	public String getAdresse() { return adresse; }
+	public void setAdresse(String adresse) { this.adresse = adresse; }
+
+	public String getParentCin() { return parentCin; }
+	public void setParentCin(String parentCin) { this.parentCin = parentCin; }
+
+	public String getNumeroTelephone() { return numeroTelephone; }
+	public void setNumeroTelephone(String numeroTelephone) { this.numeroTelephone = numeroTelephone; }
 }

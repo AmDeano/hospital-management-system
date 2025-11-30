@@ -49,6 +49,16 @@ jwt:
   expiration: 900000  # 15 minutes in milliseconds
   refresh-expiration: 604800000  # 7 days in milliseconds
 
+# CORS Configuration
+app:
+  cors:
+    allowed-origins: http://localhost:4200,http://localhost:3000
+  # Data Initialization - default credentials (development only)
+  init:
+    enabled: true
+    admin-password: ${ADMIN_PASSWORD:admin@123}
+    hr-password: ${HR_PASSWORD:hr@123}
+
 ---
 spring:
   config:
@@ -80,6 +90,16 @@ logging:
     org.springframework.security: INFO
     root: INFO
 
+# CORS Configuration (Docker)
+app:
+  cors:
+    allowed-origins: http://employee-front:4200,http://localhost:4200
+  # Data Initialization (Docker)
+  init:
+    enabled: true
+    admin-password: ${ADMIN_PASSWORD:admin@123}
+    hr-password: ${HR_PASSWORD:hr@123}
+
 ---
 spring:
   config:
@@ -109,3 +129,13 @@ logging:
     com.hospital.auth: INFO
     org.springframework.security: WARN
     root: WARN
+
+# CORS Configuration (Production)
+app:
+  cors:
+    allowed-origins: https://app.hospital.com,https://admin.hospital.com
+  # Data Initialization (Production - DISABLED by default, requires environment variables)
+  init:
+    enabled: false
+    admin-password: ${ADMIN_PASSWORD}
+    hr-password: ${HR_PASSWORD}

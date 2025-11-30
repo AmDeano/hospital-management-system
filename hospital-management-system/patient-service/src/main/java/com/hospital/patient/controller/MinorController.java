@@ -1,8 +1,7 @@
 package com.hospital.patient.controller;
 
 import com.hospital.patient.dto.PatientDto;
-import com.hospital.patient.service.PatientService;
-import lombok.RequiredArgsConstructor;
+import com.hospital.patient.service.IMinorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,22 +10,32 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/minors")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
 public class MinorController {
 
-    private final PatientService patientService = new PatientService();
+    private final IMinorService minorService;
 
-    // Get all minors
+    /**
+     * Constructor injection - follows dependency inversion principle
+     */
+    public MinorController(IMinorService minorService) {
+        this.minorService = minorService;
+    }
+
+    /**
+     * Get all minors
+     */
     @GetMapping
     public ResponseEntity<List<PatientDto>> getAllMinors() {
-        List<PatientDto> minors = patientService.getAllMinors();
+        List<PatientDto> minors = minorService.getAllMinors();
         return ResponseEntity.ok(minors);
     }
 
-    // Get minors by parent CIN
+    /**
+     * Get minors by parent CIN
+     */
     @GetMapping("/parent/{parentCin}")
     public ResponseEntity<List<PatientDto>> getMinorsByParentCin(@PathVariable String parentCin) {
-        List<PatientDto> minors = patientService.getMinorsByParentCin(parentCin);
+        List<PatientDto> minors = minorService.getMinorsByParentCin(parentCin);
         return ResponseEntity.ok(minors);
     }
 }

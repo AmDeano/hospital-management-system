@@ -106,7 +106,7 @@ services:
       - hospital-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/auth-service/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://auth-service:8083/auth-service/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -135,7 +135,7 @@ services:
       - hospital-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/patient-service/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://patient-service:8081/patient-service/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -164,7 +164,7 @@ services:
       - hospital-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/employee-service/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://employee-service:8082/employee-service/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -190,11 +190,35 @@ services:
       - ./api-gateway/nginx-api-gateway.conf:/etc/nginx/nginx-api-gateway.conf:ro
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: ["CMD", "curl", "-f", "http://api-gateway:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  employee-front:
+    build:
+      context: .
+      dockerfile: Front/employee-front/Dockerfile.employee-front
+      target: dev
+    container_name: employee-front
+    ports:
+      - "4200:4200"
+    environment:
+      - DOCKER_ENVIRONMENT=true
+    depends_on:
+      - api-gateway
+    networks:
+      - hospital-network
+    volumes:
+      - ./Front/employee-front/src:/app/src
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4200/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest

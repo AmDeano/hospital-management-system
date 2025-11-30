@@ -12,17 +12,15 @@ public record AuthResponse(
     Long userId,
     String matricule,
     String email,
-    String externalId,
+    String cin,
     Set<Role> roles,
     String dashboardRoute,
     // Patient-specific fields
     String firstName,
     String lastName,
-    String CIN,
     LocalDate dateNaissance,
     String numeroTelephone,
     String adresse,
     String numeroSecuriteSociale,
-    String parentCin,
-    Boolean isMinor
+    boolean isMinor
 ) {}

@@ -1,10 +1,10 @@
 package com.hospital.patient.controller;
 
 import com.hospital.patient.dto.PatientDto;
-import com.hospital.patient.service.PatientService;
+import com.hospital.patient.service.IPatientService;
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,13 +14,21 @@ import java.util.List;
 @RequestMapping("/api/patients")
 @CrossOrigin(origins = "*")
 public class PatientController {
-    
-	@Autowired
-	private PatientService patientService;
+
+	private final IPatientService patientService;
+
+	/**
+	 * Constructor injection - follows dependency inversion principle
+	 */
+	public PatientController(IPatientService patientService) {
+		this.patientService = patientService;
+	}
 
     
     
-    // ✅ Get all patients or search by name
+    /**
+     * Get all patients or search by name
+     */
     @GetMapping
     public ResponseEntity<List<PatientDto>> getPatients(@RequestParam(name = "name", required = false) String name) {
         if (name != null && !name.isEmpty()) {
@@ -28,8 +36,22 @@ public class PatientController {
         }
         return ResponseEntity.ok(patientService.getAllPatients());
     }
-    
- // Get patient by ID
+
+    /**
+     * Create new patient
+     * Note: Patient ID is auto-generated based on age (MINOR-xxxx for minors, CIN for adults)
+     */
+    @PostMapping
+    public ResponseEntity<PatientDto> createPatient(@Valid @RequestBody PatientDto patientDto) {
+        // Patient creation is handled by auth-service
+        // This endpoint is for completeness and can be used to create patients directly
+        PatientDto createdPatient = patientService.updatePatient(patientDto.getId(), patientDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdPatient);
+    }
+
+    /**
+     * Get patient by ID
+     */
     @GetMapping("/{id}")
     public ResponseEntity<PatientDto> getPatientById(@PathVariable("id") String id) {
         PatientDto patient = patientService.getPatientById(id);

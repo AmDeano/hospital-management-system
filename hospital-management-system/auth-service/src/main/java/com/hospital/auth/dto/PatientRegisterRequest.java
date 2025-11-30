@@ -14,6 +14,6 @@ public record PatientRegisterRequest(
     String numeroTelephone,
     String adresse,
     String numeroSecuriteSociale,
-    String CIN,
+    String cin,
     String parentCin
 ) {}

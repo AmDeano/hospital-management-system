@@ -22,18 +22,21 @@ import java.util.stream.Collectors;
 /**
  * Handles business logic for managing patients.
  * Also publishes synchronization events through RabbitMQ.
+ * Implements service interface to support dependency inversion.
  */
 @Service
 @Transactional
-public class PatientService {
+public class PatientService implements IPatientService, IMinorService {
 
     private static final Logger logger = LoggerFactory.getLogger(PatientService.class);
 
-    @Autowired
-    private PatientRepository patientRepository;
+    private final PatientRepository patientRepository;
+    private final PatientEventPublisher patientEventPublisher;
 
-    @Autowired
-    private PatientEventPublisher patientEventPublisher; // ✅ fixed: using correct publisher
+    public PatientService(PatientRepository patientRepository, PatientEventPublisher patientEventPublisher) {
+        this.patientRepository = patientRepository;
+        this.patientEventPublisher = patientEventPublisher;
+    }
 
 //    // -----------------------------------------------------------
 //    // CREATE
@@ -212,6 +215,22 @@ public class PatientService {
     // UTILITIES
     // -----------------------------------------------------------
     private void validatePatientData(PatientDto patientDto) {
+        if (patientDto == null) {
+            throw new InvalidPatientDataException("Patient data cannot be null");
+        }
+
+        if (patientDto.getNom() == null || patientDto.getNom().trim().isEmpty()) {
+            throw new InvalidPatientDataException("Nom du patient requis");
+        }
+
+        if (patientDto.getEmail() == null || patientDto.getEmail().trim().isEmpty()) {
+            throw new InvalidPatientDataException("Email requis");
+        }
+
+        if (!patientDto.getEmail().contains("@")) {
+            throw new InvalidPatientDataException("Email invalide");
+        }
+
         if (patientDto.getDateNaissance() == null) {
             throw new InvalidPatientDataException("Date de naissance requise");
         }

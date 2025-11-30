@@ -24,13 +24,13 @@ WORKDIR /app
 RUN npm install -g @angular/cli@20.1.6
 
 # Copy package files first (for better caching)
-COPY package*.json ./
+COPY Front/employee-front/package*.json ./
 
 # Install dependencies
 RUN npm ci --silent
 
 # Copy source code
-COPY . .
+COPY Front/employee-front/ .
 
 # Build Angular app for production
 RUN npm run build -- --configuration production
@@ -60,16 +60,13 @@ WORKDIR /app
 RUN npm install -g @angular/cli@20.1.6
 
 # Copy package files first
-COPY package*.json ./
+COPY Front/employee-front/package*.json ./
 
 # Install all dependencies (with devDependencies)
 RUN npm install
 
 # Copy source code
-COPY . .
-
-# Expose Angular dev server port
-EXPOSE 4200
+COPY Front/employee-front/ .
 
 # Create a non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -77,5 +74,14 @@ RUN addgroup -g 1001 -S nodejs && \
     chown -R angular:nodejs /app
 USER angular
 
+# Expose Angular dev server port
+EXPOSE 4200
+
+# Create a startup script to inject environment variables
+RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'echo "Starting Angular dev server..."' >> /app/entrypoint.sh && \
+    echo 'ng serve --host 0.0.0.0 --port 4200 --poll 2000' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
 # Default command for development
-CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--poll", "2000"]
+CMD ["/app/entrypoint.sh"]

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { TokenService } from './token.service';
+import { ConfigService } from '../core/config.service';
 
 export interface AuthResponse {
   accessToken: string; refreshToken: string; tokenType: string;
@@ -11,17 +12,23 @@ export interface AuthResponse {
 
 @Injectable({ providedIn:'root' })
 export class AuthService {
-  private base = 'http://localhost:9000/auth-service/api/auth';
+  private base: string;
 
-  constructor(private http: HttpClient, private tokens: TokenService) {}
+  constructor(
+    private http: HttpClient,
+    private tokens: TokenService,
+    private config: ConfigService
+  ) {
+    this.base = this.config.getAuthServiceUrl();
+  }
 
-  login(username: string, password: string){
-    return this.http.post<AuthResponse>(`${this.base}/login`, { username, password })
+  login(matricule: string, password: string){
+    return this.http.post<AuthResponse>(`${this.base}/employee/login`, { matricule, password })
       .pipe(tap(res => { this.tokens.access = res.accessToken; this.tokens.refresh = res.refreshToken; }));
   }
 
-  register(data: {username:string; email:string; password:string; roles:string[]; externalId?:string}){
-    return this.http.post<void>(`${this.base}/register`, data);
+  register(data: {matricule:string; email:string; password:string; roles:string[]; externalId?:string}){
+    return this.http.post<void>(`${this.base}/employee/register`, data);
   }
 
   refresh(){
@@ -30,4 +37,11 @@ export class AuthService {
   }
 
   logout(){ this.tokens.clear(); }
+
+  /**
+   * Get user roles from the JWT token
+   */
+  getUserRoles(): string[] {
+    return this.tokens.roles();
+  }
 }

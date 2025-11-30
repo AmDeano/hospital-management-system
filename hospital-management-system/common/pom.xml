@@ -18,9 +18,6 @@
     <description>Shared classes and DTOs</description>
 
     <dependencies>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
+        <!-- No external dependencies - contains only plain Java POJOs for event communication -->
     </dependencies>
 </project>

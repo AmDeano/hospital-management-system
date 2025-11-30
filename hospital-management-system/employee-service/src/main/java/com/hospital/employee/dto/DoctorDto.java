@@ -1,17 +1,18 @@
 // DoctorDto.java
 package com.hospital.employee.dto;
 
+import com.hospital.employee.entity.Doctor;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 
 public class DoctorDto extends EmployeeDto {
-    
+
     @NotBlank(message = "Specialization is required")
     private String specialization;
-    
+
     @NotBlank(message = "License number is required")
     private String licenseNumber;
-    
+
     private String medicalDegree;
 
     // Default constructor
@@ -86,5 +87,23 @@ public class DoctorDto extends EmployeeDto {
                 ", medicalDegree='" + medicalDegree + '\'' +
                 ", isActive=" + getIsActive() +
                 '}';
+    }
+
+    /**
+     * Convert Doctor entity to DoctorDto
+     */
+    public static DoctorDto fromEntity(Doctor doctor) {
+        DoctorDto dto = new DoctorDto();
+        dto.setMatricule(doctor.getMatricule());
+        dto.setFirstName(doctor.getFirstName());
+        dto.setLastName(doctor.getLastName());
+        dto.setEmail(doctor.getEmail());
+        dto.setPhone(doctor.getPhone());
+        dto.setAddress(doctor.getAddress());
+        dto.setSpecialization(doctor.getSpecialization());
+        dto.setLicenseNumber(doctor.getLicenseNumber());
+        dto.setMedicalDegree(doctor.getMedicalDegree());
+        dto.setIsActive(doctor.getIsActive());
+        return dto;
     }
 }

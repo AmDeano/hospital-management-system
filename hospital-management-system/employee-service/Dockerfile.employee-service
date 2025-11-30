@@ -4,7 +4,22 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
 WORKDIR /app
-COPY . .
+
+# Copy parent pom
+COPY pom.xml .
+
+# Copy ALL module poms AND sources (Maven needs to see them all)
+COPY common/pom.xml common/
+COPY common/src common/src
+
+COPY auth-service/pom.xml auth-service/
+COPY auth-service/src auth-service/src
+
+COPY employee-service/pom.xml employee-service/
+COPY employee-service/src employee-service/src
+
+COPY patient-service/pom.xml patient-service/
+COPY patient-service/src patient-service/src
 
 # Build only the employee-service module without tests
 RUN mvn clean package -pl employee-service -am -DskipTests

@@ -1,0 +1,101 @@
+<div class="dashboard-container">
+  <h1>Hospital Management System - Dashboard</h1>
+  <p class="subtitle">Central hub for managing all hospital operations</p>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <p>Loading statistics...</p>
+  </div>
+
+  <!-- Statistics Cards -->
+  <mat-grid-list cols="2" rowHeight="200px" *ngIf="!loading" gutterSize="20px" class="stats-grid">
+    <mat-grid-tile>
+      <mat-card class="stat-card employees">
+        <mat-card-header>
+          <mat-card-title>Employees</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-number">{{ stats.employees }}</div>
+          <p class="stat-label">Total Employees</p>
+          <button mat-raised-button color="primary" [routerLink]="['/employees']">
+            View All
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card class="stat-card doctors">
+        <mat-card-header>
+          <mat-card-title>Doctors</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-number">{{ stats.doctors }}</div>
+          <p class="stat-label">Total Doctors</p>
+          <button mat-raised-button color="primary" [routerLink]="['/doctors']">
+            View All
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card class="stat-card nurses">
+        <mat-card-header>
+          <mat-card-title>Nurses</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-number">{{ stats.nurses }}</div>
+          <p class="stat-label">Total Nurses</p>
+          <button mat-raised-button color="primary" [routerLink]="['/nurses']">
+            View All
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card class="stat-card patients">
+        <mat-card-header>
+          <mat-card-title>Patients</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stat-number">{{ stats.patients }}</div>
+          <p class="stat-label">Total Patients</p>
+          <button mat-raised-button color="primary" [routerLink]="['/patients']">
+            View All
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+  </mat-grid-list>
+
+  <!-- Navigation Menu -->
+  <section class="navigation-section">
+    <h2>Quick Navigation</h2>
+    <div class="nav-cards">
+      <mat-card [routerLink]="['/employees']" class="nav-card">
+        <mat-icon>people</mat-icon>
+        <h3>Employee Management</h3>
+        <p>Manage all hospital employees</p>
+      </mat-card>
+
+      <mat-card [routerLink]="['/doctors']" class="nav-card">
+        <mat-icon>medical_services</mat-icon>
+        <h3>Doctor Management</h3>
+        <p>Manage doctors and specializations</p>
+      </mat-card>
+
+      <mat-card [routerLink]="['/nurses']" class="nav-card">
+        <mat-icon>local_hospital</mat-icon>
+        <h3>Nurse Management</h3>
+        <p>Manage nurses and shifts</p>
+      </mat-card>
+
+      <mat-card [routerLink]="['/patients']" class="nav-card">
+        <mat-icon>person</mat-icon>
+        <h3>Patient Management</h3>
+        <p>Manage patient records</p>
+      </mat-card>
+    </div>
+  </section>
+</div>

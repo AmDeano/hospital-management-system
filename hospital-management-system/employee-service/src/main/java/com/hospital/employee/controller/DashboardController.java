@@ -1,6 +1,6 @@
 package com.hospital.employee.controller;
 
-import com.hospital.employee.usecase.DetermineDashboardRouteUseCase;
+import com.hospital.employee.service.DetermineDashboardRouteUseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;

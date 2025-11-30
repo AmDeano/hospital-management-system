@@ -7,13 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
-    ReactiveFormsModule, NgIf,
+    ReactiveFormsModule,
     MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule,
     RouterLink
   ],
@@ -23,8 +22,8 @@ import { NgIf } from '@angular/common';
 
     <form [formGroup]="form" (ngSubmit)="submit()" style="margin-top:12px;">
       <mat-form-field appearance="outline" class="w-100">
-        <mat-label>Username</mat-label>
-        <input matInput formControlName="username" autocomplete="username">
+        <mat-label>Matricule</mat-label>
+        <input matInput formControlName="matricule" autocomplete="username">
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-100">
@@ -50,7 +49,7 @@ import { NgIf } from '@angular/common';
 export class LoginComponent implements OnInit {
   hide = signal(true);
   loading = signal(false);
-  form!: FormGroup; // Use definite assignment assertion
+  form!: FormGroup;
 
   constructor(
     private fb: FormBuilder, 
@@ -61,7 +60,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      username: ['', [Validators.required]],
+      matricule: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(4)]],
     });
   }
@@ -73,15 +72,22 @@ export class LoginComponent implements OnInit {
   submit() {
     if (this.form.invalid) return;
     this.loading.set(true);
-    const { username, password } = this.form.value as any;
-    this.auth.login(username, password).subscribe({
-      next: () => { 
-        this.loading.set(false); 
-        this.router.navigateByUrl('/employees'); 
+    const { matricule, password } = this.form.value as any;
+    this.auth.login(matricule, password).subscribe({
+      next: () => {
+        this.loading.set(false);
+        // Get user roles from token and redirect accordingly
+        const roles = this.auth.getUserRoles();
+        if (roles.includes('DOCTOR')) {
+          this.router.navigateByUrl(`/dashboard/doctors/${matricule}`);
+        } else {
+          this.router.navigateByUrl('/employees');
+        }
       },
-      error: () => { 
-        this.loading.set(false); 
-        this.sb.open('Invalid username or password', 'Close', { duration: 3000 }); 
+      error: (err) => {
+        this.loading.set(false);
+        const errorMessage = err.error?.message || 'Invalid matricule or password';
+        this.sb.open(errorMessage, 'Close', { duration: 3000 });
       }
     });
   }

@@ -178,22 +178,17 @@ public interface UserRepository extends JpaRepository<UserAccount, Long> {
     /**
      * Find patient by CIN
      */
-    Optional<UserAccount> findByCIN(String cin);
+    Optional<UserAccount> findByCIN(String CIN);
 
     /**
      * Check if a CIN exists (for adults)
      */
-    boolean existsByCIN(String cin);
+    boolean existsByCIN(String CIN);
 
     /**
      * Find patients by birth date
      */
     List<UserAccount> findByDateNaissance(LocalDate dateNaissance);
-
-    /**
-     * Find patients by minor status
-     */
-    List<UserAccount> findByIsMinor(Boolean isMinor);
 
     /**
      * Find patients by parent's CIN

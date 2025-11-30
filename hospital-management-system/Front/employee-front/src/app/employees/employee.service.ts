@@ -4,16 +4,22 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Employee, SearchCriteria } from './employee.model';
+import { ConfigService } from '../core/config.service';
 
 
 @Injectable({
 	providedIn :'root'
 })
 export class EmployeeService {
-  
-  private readonly API_URL = 'http://localhost:8082/employee-service/api/employees';
 
-  constructor(private http: HttpClient) {}
+  private API_URL: string;
+
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService
+  ) {
+    this.API_URL = `${this.config.getEmployeeServiceUrl()}/employees`;
+  }
 
   // Get all employees
   getAllEmployees(): Observable<Employee[]> {

@@ -7,13 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [
-    ReactiveFormsModule, NgIf,
+    ReactiveFormsModule,
     MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule,
     RouterLink
   ],

@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Set;
 
 public class EmployeeCreatedEvent implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Long id;
     private String matricule;
     private String email;
@@ -11,7 +13,6 @@ public class EmployeeCreatedEvent implements Serializable {
     private String lastName;
     private String phone;
     private String address;
-    //private Object object;
     private String passwordHash;
     private Set<String> roles;
     private String externalId;
@@ -38,12 +39,26 @@ public class EmployeeCreatedEvent implements Serializable {
     public EmployeeCreatedEvent() {}
     
     // Full constructor with correct parameter types
-    public EmployeeCreatedEvent(Long id, String matricule, String email, 
-                               String firstName, String lastName, String phone, String address, 
+    public EmployeeCreatedEvent(Long id, String matricule, String email,
+                               String firstName, String lastName, String phone, String address,
                                String passwordHash, Set<String> roles, String externalId,
                                String specialization, String licenseNumber, String medicalDegree,
                                String shift, String nurseLicenseNumber,
                                String deskNumber, String departmentArea, String assignedArea) {
+        // Validate required fields
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
+        if (matricule == null || matricule.isBlank()) {
+            throw new IllegalArgumentException("Matricule cannot be null or empty");
+        }
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+        if (!email.contains("@")) {
+            throw new IllegalArgumentException("Invalid email format: " + email);
+        }
+
         this.id = id;
         this.matricule = matricule;
         this.email = email;
@@ -79,14 +94,23 @@ public class EmployeeCreatedEvent implements Serializable {
     }
     
     public void setMatricule(String matricule) {
+        if (matricule == null || matricule.isBlank()) {
+            throw new IllegalArgumentException("Matricule cannot be null or empty");
+        }
         this.matricule = matricule;
     }
-    
+
     public String getEmail() {
         return email;
     }
-    
+
     public void setEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+        if (!email.contains("@")) {
+            throw new IllegalArgumentException("Invalid email format: " + email);
+        }
         this.email = email;
     }
     
@@ -153,10 +177,14 @@ public class EmployeeCreatedEvent implements Serializable {
     public String getAssignedArea() { return assignedArea; }
     public void setAssignedArea(String assignedArea) { this.assignedArea = assignedArea; }
     
-    public String getAddress () {
-    	return address;
+    public String getAddress() {
+        return address;
     }
-    
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     @Override
     public String toString() {
         return "EmployeeCreatedEvent{" +
@@ -165,12 +193,27 @@ public class EmployeeCreatedEvent implements Serializable {
                 ", email='" + email + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", address='" + address + '\'' +
+                ", passwordHash='" + passwordHash + '\'' +
                 ", roles=" + roles +
                 ", externalId='" + externalId + '\'' +
+                ", specialization='" + specialization + '\'' +
+                ", licenseNumber='" + licenseNumber + '\'' +
+                ", medicalDegree='" + medicalDegree + '\'' +
+                ", shift='" + shift + '\'' +
+                ", nurseLicenseNumber='" + nurseLicenseNumber + '\'' +
+                ", deskNumber='" + deskNumber + '\'' +
+                ", departmentArea='" + departmentArea + '\'' +
+                ", assignedArea='" + assignedArea + '\'' +
                 '}';
     }
 
 	public String getPhone() {
 		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
 	}
 }

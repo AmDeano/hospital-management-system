@@ -1,7 +1,7 @@
 package com.hospital.employee.controller;
 
 import com.hospital.employee.entity.Receptionist;
-import com.hospital.employee.usecase.ReceptionistUseCaseImpl;
+import com.hospital.employee.service.ReceptionistService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,37 +15,37 @@ import java.util.Optional;
 @PreAuthorize("hasRole('ADMIN') or hasRole('RECEPTIONIST') or hasRole('SUPERVISOR')")
 public class ReceptionistController {
 
-    private final ReceptionistUseCaseImpl receptionistUseCase;
+    private final ReceptionistService receptionistService;
 
-    public ReceptionistController(ReceptionistUseCaseImpl receptionistUseCase) {
-        this.receptionistUseCase = receptionistUseCase;
+    public ReceptionistController(ReceptionistService receptionistService) {
+        this.receptionistService = receptionistService;
     }
 
     @GetMapping
     public ResponseEntity<List<Receptionist>> all() {
-        return ResponseEntity.ok(receptionistUseCase.findAll());
+        return ResponseEntity.ok(receptionistService.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Receptionist> get(@PathVariable Long id) {
-        return ResponseEntity.ok(receptionistUseCase.findById(id));
+        return ResponseEntity.ok(receptionistService.findById(id));
     }
 
     @GetMapping("/desk/{deskNumber}")
     public ResponseEntity<Optional<Receptionist>> getByDeskNumber(@PathVariable String deskNumber) {
-        return ResponseEntity.ok(receptionistUseCase.findByDeskNumber(deskNumber));
+        return ResponseEntity.ok(receptionistService.findByDeskNumber(deskNumber));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Receptionist> update(@PathVariable Long id, @Valid @RequestBody Receptionist receptionist) {
-        return ResponseEntity.ok(receptionistUseCase.update(id, receptionist));
+        return ResponseEntity.ok(receptionistService.update(id, receptionist));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        receptionistUseCase.delete(id);
+        receptionistService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

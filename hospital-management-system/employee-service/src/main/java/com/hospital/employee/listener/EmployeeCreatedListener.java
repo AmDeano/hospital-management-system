@@ -4,6 +4,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import com.hospital.common.events.EmployeeCreatedEvent;
+import com.hospital.employee.config.RabbitConfig;
 import com.hospital.employee.entity.*;
 import com.hospital.employee.repository.*;
 
@@ -29,7 +30,7 @@ public class EmployeeCreatedListener {
         this.observatorRepository = observatorRepository;
     }
 
-    @RabbitListener(queues = "employee.created.queue")
+    @RabbitListener(queues = RabbitConfig.EMPLOYEE_CREATED_QUEUE)
     public void handleEmployeeCreated(EmployeeCreatedEvent event) {
         System.out.println("Received EmployeeCreatedEvent: " + event.getMatricule());
 

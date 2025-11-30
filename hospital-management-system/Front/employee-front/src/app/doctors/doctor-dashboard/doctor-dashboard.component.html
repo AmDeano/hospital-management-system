@@ -1,0 +1,281 @@
+<div class="doctor-dashboard">
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading doctor dashboard...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error && !loading" class="error-container">
+    <mat-card class="error-card">
+      <mat-card-header>
+        <mat-icon color="warn">error</mat-icon>
+        <mat-card-title>Error</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>{{ error }}</mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="loadDoctorDashboard()">
+          Retry
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="dashboard && !loading" class="dashboard-content">
+    <!-- Header -->
+    <mat-toolbar color="primary" class="dashboard-header">
+      <span class="spacer"></span>
+      <h2>{{ dashboard.firstName }} {{ dashboard.lastName }} - Doctor Dashboard</h2>
+      <span class="spacer"></span>
+    </mat-toolbar>
+
+    <!-- Doctor Info Card -->
+    <mat-card class="doctor-info-card">
+      <mat-card-header>
+        <mat-icon>person</mat-icon>
+        <mat-card-title>Personal Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <strong>Matricule:</strong> {{ dashboard.matricule }}
+          </div>
+          <div class="info-item">
+            <strong>Specialization:</strong> {{ dashboard.specialization }}
+          </div>
+          <div class="info-item">
+            <strong>License Number:</strong> {{ dashboard.licenseNumber }}
+          </div>
+          <div class="info-item">
+            <strong>Medical Degree:</strong> {{ dashboard.medicalDegree }}
+          </div>
+          <div class="info-item">
+            <strong>Department:</strong> {{ dashboard.departmentName }}
+          </div>
+          <div class="info-item">
+            <strong>Email:</strong> {{ dashboard.email }}
+          </div>
+          <div class="info-item">
+            <strong>Phone:</strong> {{ dashboard.phone || 'N/A' }}
+          </div>
+          <div class="info-item">
+            <strong>Status:</strong>
+            <span [class.active]="dashboard.isActive" [class.inactive]="!dashboard.isActive">
+              {{ dashboard.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Dashboard Stats -->
+    <div class="stats-container">
+      <mat-card class="stat-card">
+        <mat-card-header>
+          <mat-icon>people</mat-icon>
+          <mat-card-title>Total Patients</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="stat-value">
+          {{ dashboard.totalPatientsCount }}
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-header>
+          <mat-icon>event</mat-icon>
+          <mat-card-title>Today's Appointments</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="stat-value">
+          {{ dashboard.appointmentsTodayCount }}
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-header>
+          <mat-icon>prescription</mat-icon>
+          <mat-card-title>Pending Prescriptions</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="stat-value">
+          {{ dashboard.pendingPrescriptionsCount }}
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-header>
+          <mat-icon>description</mat-icon>
+          <mat-card-title>Recent Records</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="stat-value">
+          {{ dashboard.recentMedicalRecordsCount }}
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Doctor Functionalities Section -->
+    <mat-card class="functionalities-card">
+      <mat-card-header>
+        <mat-icon>assignment</mat-icon>
+        <mat-card-title>Doctor Functionalities</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-tab-group>
+          <!-- Prescriptions Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">medication</mat-icon>
+              <span>Prescriptions</span>
+            </ng-template>
+            <div class="tab-content">
+              <h3>Prescription Management</h3>
+              <p>Create and manage patient prescriptions</p>
+              <button mat-raised-button color="primary" (click)="viewPrescriptions()">
+                <mat-icon>add</mat-icon> Create Prescription
+              </button>
+              <button mat-raised-button (click)="viewPrescriptions()" class="secondary-btn">
+                <mat-icon>list</mat-icon> View Prescriptions
+              </button>
+            </div>
+          </mat-tab>
+
+          <!-- Medical Records Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">medical_services</mat-icon>
+              <span>Medical Records</span>
+            </ng-template>
+            <div class="tab-content">
+              <h3>Medical Records & Diagnosis</h3>
+              <p>View and create patient medical records and diagnoses</p>
+              <button mat-raised-button color="primary" (click)="viewMedicalRecords()">
+                <mat-icon>add</mat-icon> Create Record
+              </button>
+              <button mat-raised-button (click)="viewMedicalRecords()" class="secondary-btn">
+                <mat-icon>list</mat-icon> View Records
+              </button>
+            </div>
+          </mat-tab>
+
+          <!-- Appointments Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">event</mat-icon>
+              <span>Appointments</span>
+            </ng-template>
+            <div class="tab-content">
+              <h3>Schedule & Appointments</h3>
+              <p>Schedule patient consultations and manage appointments</p>
+              <button mat-raised-button color="primary" (click)="viewAppointments()">
+                <mat-icon>add</mat-icon> Schedule Appointment
+              </button>
+              <button mat-raised-button (click)="viewAppointments()" class="secondary-btn">
+                <mat-icon>list</mat-icon> View Appointments
+              </button>
+            </div>
+          </mat-tab>
+
+          <!-- Diagnostics Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">science</mat-icon>
+              <span>Diagnostics</span>
+            </ng-template>
+            <div class="tab-content">
+              <h3>Lab Tests & Diagnostic Reports</h3>
+              <p>Order lab tests and view diagnostic reports</p>
+              <button mat-raised-button color="primary" (click)="orderTests()">
+                <mat-icon>add</mat-icon> Order Test
+              </button>
+              <button mat-raised-button (click)="orderTests()" class="secondary-btn">
+                <mat-icon>list</mat-icon> View Results
+              </button>
+            </div>
+          </mat-tab>
+
+          <!-- Patients Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">people</mat-icon>
+              <span>Patients</span>
+            </ng-template>
+            <div class="tab-content">
+              <h3>Patient Management</h3>
+              <p>View and manage your patients</p>
+              <button mat-raised-button color="primary" (click)="viewPatients()">
+                <mat-icon>list</mat-icon> View Patients
+              </button>
+              <button mat-raised-button (click)="viewPatients()" class="secondary-btn">
+                <mat-icon>search</mat-icon> Search Patient
+              </button>
+            </div>
+          </mat-tab>
+
+          <!-- Schedule Tab -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">schedule</mat-icon>
+              <span>Schedule</span>
+            </ng-template>
+            <div class="tab-content">
+              <h3>Weekly Schedule & Availability</h3>
+              <p>Manage your working hours and availability</p>
+              <button mat-raised-button color="primary" (click)="manageSchedule()">
+                <mat-icon>edit</mat-icon> Manage Schedule
+              </button>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Weekly Schedule Section -->
+    <mat-card class="schedule-card" *ngIf="dashboard.schedules && dashboard.schedules.length > 0">
+      <mat-card-header>
+        <mat-icon>schedule</mat-icon>
+        <mat-card-title>Weekly Schedule</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-list>
+          <mat-list-item *ngFor="let schedule of dashboard.schedules">
+            <mat-icon matListItemIcon>access_time</mat-icon>
+            <span matListItemTitle>{{ getWeekdayName(schedule.dayOfWeek) }}</span>
+            <span matListItemLine>
+              {{ formatTime(schedule.startTime) }} - {{ formatTime(schedule.endTime) }}
+            </span>
+            <span matListItemLine class="availability">
+              <strong>Status:</strong>
+              <span [class.available]="schedule.isAvailable" [class.unavailable]="!schedule.isAvailable">
+                {{ schedule.isAvailable ? 'Available' : 'Unavailable' }}
+              </span>
+            </span>
+          </mat-list-item>
+        </mat-list>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Upcoming Availability Slots -->
+    <mat-card class="availability-card" *ngIf="dashboard.availabilitySlots && dashboard.availabilitySlots.length > 0">
+      <mat-card-header>
+        <mat-icon>calendar_today</mat-icon>
+        <mat-card-title>Upcoming Available Slots (Next 30 Days)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-list>
+          <mat-list-item *ngFor="let slot of dashboard.availabilitySlots | slice:0:10">
+            <mat-icon matListItemIcon>event_available</mat-icon>
+            <span matListItemTitle>{{ formatDate(slot.availableDate) }}</span>
+            <span matListItemLine>
+              {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+            </span>
+            <span matListItemLine *ngIf="slot.notes" class="notes">
+              <strong>Notes:</strong> {{ slot.notes }}
+            </span>
+          </mat-list-item>
+        </mat-list>
+        <p *ngIf="dashboard.availabilitySlots.length > 10" class="show-more">
+          ... and {{ dashboard.availabilitySlots.length - 10 }} more slots
+        </p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

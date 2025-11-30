@@ -16,6 +16,8 @@ export class TokenService {
 
   clear(){ this.access = null; this.refresh = null; }
 
+  logout(): void { this.clear(); }
+
   isLoggedIn(): boolean { return !!this.access && !this.isExpired(this.access!); }
 
   decode<T = Decoded>(token: string | null): T | null {

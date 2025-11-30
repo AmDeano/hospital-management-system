@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
 
-    // Same queue configuration to listen to patient events
-    public static final String PATIENT_QUEUE = "patient.queue";
+    // Queue names must match across all services for proper event routing
+    public static final String PATIENT_QUEUE = "patient.events.queue";
     public static final String EMPLOYEE_CREATED_QUEUE = "employee.created.queue";
     public static final String USER_CREATED_QUEUE = "user.created.queue";
 
@@ -34,6 +34,6 @@ public class RabbitConfig {
     
     @Bean
     public Queue employeeCreatedQueue() {
-        return new Queue("employee.created.queue", true);
+        return new Queue(EMPLOYEE_CREATED_QUEUE, true);
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,8 +64,8 @@ public class AuthService {
         validateNotNull(request, "Patient registration request");
         // Use CIN or email as unique identifier
         validateUniqueEmail(request.email());
-        if (request.CIN() != null && !request.CIN().isBlank()) {
-            validateUniqueCIN(request.CIN());
+        if (request.cin() != null && !request.cin().isBlank()) {
+            validateUniquecin(request.cin());
         }
 
         UserAccount account = buildPatientAccount(request);
@@ -73,9 +74,11 @@ public class AuthService {
         log.info("✅ Patient registered successfully: {}", account.getCIN());
         publishPatientCreatedEvent(account);
     }
-    private void validateUniqueCIN(String cin) {
-        if (cin != null && !cin.isBlank() && userRepository.existsByCIN(cin)) {
-            throw new IllegalArgumentException("CIN already exists: " + cin);
+    private void validateUniquecin(String cin) {
+        if (cin != null && !cin.isBlank()) {
+            if (userRepository.existsByCIN(cin)) {
+                throw new IllegalArgumentException("CIN already exists: " + cin);
+            }
         }
     }
 
@@ -229,14 +232,20 @@ public class AuthService {
 
     private UserAccount buildPatientAccount(PatientRegisterRequest req) {
         UserAccount account = new UserAccount();
-        
+
+        // Determine if patient is minor based on birth date
+        boolean minor = isMinor(req.dateNaissance());
+
         // Use CIN for adults as matricule, else generate a random ID for minors
-        if (req.CIN() != null && !req.CIN().isBlank()) {
-            account.setMatricule(req.CIN());
-            account.setCIN(req.CIN());
-        } else {
+        if (!minor && req.cin() != null && !req.cin().isBlank()) {
+            account.setMatricule(req.cin());
+            account.setCIN(req.cin());
+        } else if (minor) {
             account.setMatricule("MINOR-" + java.util.UUID.randomUUID());
             account.setCIN(null); // minors don't have CIN
+        } else {
+            account.setMatricule("PATIENT-" + java.util.UUID.randomUUID());
+            account.setCIN(null);
         }
 
         account.setEmail(req.email());
@@ -247,19 +256,11 @@ public class AuthService {
         // Patient personal info
         account.setFirstName(req.firstName());
         account.setLastName(req.lastName());
-        account.setdateNaissance(req.dateNaissance());
-        account.setnumeroTelephone(req.numeroTelephone());
-        account.setadresse(req.adresse());
-        account.setnumeroSecuriteSociale(req.numeroSecuriteSociale());
-        account.setparentCin(req.parentCin());
-
-        // Calculate isMinor based on birth date
-        if (req.dateNaissance() != null) {
-            int age = java.time.Period.between(req.dateNaissance(), java.time.LocalDate.now()).getYears();
-            account.setisMinor(age < 18);
-        } else {
-            account.setisMinor(false);
-        }
+        account.setDateNaissance(req.dateNaissance());
+        account.setNumeroTelephone(req.numeroTelephone());
+        account.setAdresse(req.adresse());
+        account.setNumeroSecuriteSociale(req.numeroSecuriteSociale());
+        account.setParentCin(req.parentCin());
 
         return account;
     }
@@ -273,9 +274,9 @@ public class AuthService {
         account.setRoles(roles);
         account.setEnabled(true);
         account.setExternalId(defaultIfNull(req.externalId(), req.matricule()));
-        
-        account.setadresse(req.address());
-        account.setnumeroTelephone(req.phone());
+
+        account.setAdresse(req.address());
+        account.setNumeroTelephone(req.phone());
 
         return account;
     }
@@ -285,18 +286,19 @@ public class AuthService {
     private void publishPatientCreatedEvent(UserAccount user) {
         try {
             String fullName = buildFullName(user.getFirstName(), user.getLastName());
+            boolean minor = isMinor(user.getDateNaissance());
 
             patientEventPublisher.publishPatientCreatedEvent(
                     user.getId().toString(),
                     fullName,
                     user.getEmail(),
                     user.getCIN(),
-                    user.getdateNaissance(),
-                    user.isMinor(),
-                    user.getparentCin(),
-                    user.getnumeroTelephone(),
-                    user.getadresse(),
-                    user.getnumeroSecuriteSociale()
+                    user.getDateNaissance(),
+                    minor,
+                    user.getParentCin(),
+                    user.getNumeroTelephone(),
+                    user.getAdresse(),
+                    user.getNumeroSecuriteSociale()
             );
 
             log.info("✅ Sent PatientCreatedEvent for patient: {} (CIN: {})", fullName, user.getCIN());
@@ -347,6 +349,13 @@ public class AuthService {
     }
 
     // ==================== UTILITIES ====================
+
+    private boolean isMinor(LocalDate dateNaissance) {
+        if (dateNaissance == null) {
+            return false;
+        }
+        return java.time.Period.between(dateNaissance, java.time.LocalDate.now()).getYears() < 18;
+    }
 
     private UserAccount findUserByMatricule(String matricule) {
         return userRepository.findByMatricule(matricule)
@@ -415,7 +424,10 @@ public class AuthService {
 
         String accessToken = generateAccessToken(user, roleNames, now);
         String refreshToken = generateRefreshToken(user, now);
-        String dashboardRoute = dashboardService.getDashboardRoute(user.getRoles().iterator().next());
+        String dashboardRoute = user.getRoles().isEmpty()
+                ? "/dashboard/default"
+                : dashboardService.getDashboardRoute(user.getRoles().iterator().next());
+        boolean minor = isMinor(user.getDateNaissance());
 
         return new AuthResponse(
                 accessToken,
@@ -429,13 +441,11 @@ public class AuthService {
                 dashboardRoute,
                 user.getFirstName(),
                 user.getLastName(),
-                user.getCIN(),
-                user.getdateNaissance(),
-                user.getnumeroTelephone(),
-                user.getadresse(),
-                user.getnumeroSecuriteSociale(),
-                user.getCIN(),
-                user.isMinor()
+                user.getDateNaissance(),
+                user.getNumeroTelephone(),
+                user.getAdresse(),
+                user.getNumeroSecuriteSociale(),
+                minor
         );
     }
 
